@@ -3,14 +3,20 @@ import { useData } from '../context/DataContext';
 import './css/Common.css';
 import './css/Filter.css';
 import NumberInputWithButton from './NumberInputWithButton';
+import { getTemplates } from '../api/api';
+import { useLoader } from '../context/LoaderContext';
+import { toast, Toaster } from 'react-hot-toast';
+import FileUploader from './FileUploader';
 
-const FilterPanel = ({  onFilterChange, onAction }) => {
+const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
 
     const { jsonData } = useData();
+    const { setLoading } = useLoader();
+    const [showFileUpload] = useState(true);
 
     const runTypeOptions = [
         { value: 'optimization', text: 'Optimization' },
-        { value: 'static', text: 'Static' }
+        { value: 'static', text: 'Simulation' }
     ];
 
     const foamTypeOptions = [
@@ -39,30 +45,59 @@ const FilterPanel = ({  onFilterChange, onAction }) => {
         { value: 'variable', text: 'Variable' }
     ];
 
-    const [runTypes, setRunTypes] = useState(runTypeOptions);
-    const [selectedRunType, setSelectedRunType] = useState('optimization');   
+    const [templates, setTemplates] = useState([]);
+    const [selectedTemplate, setSelectedTemplate] = useState({});
 
-    const [foamTypes, setFoamTypes] = useState(foamTypeOptions);
+    const [selectedRunType, setSelectedRunType] = useState('optimization');
     const [selectedFoamType, setSelectedFoamType] = useState('HRSlab');
-
-    const [objectiveType, setObjectiveType] = useState(objectiveOptions);
     const [selectedObjectiveType, setSelectedObjectiveType] = useState('cost');
-
-    const [objectiveSense, setObjectiveSense] = useState(objectiveSenseOptions);
-    const [selectedObjectiveSense, setSelectedObjectiveSense] = useState('min');
-
-    const [polyolType, setPolyolType] = useState(polyolTypeOptions);
+    const [selectedObjectiveSense, setSelectedObjectiveSense] = useState('max');
     const [selectedPolyolType, setSelectedPolyolType] = useState('multiple');
-
-    const [theoreticalProperty, setTheoreticalProperty] = useState(theoreticalPropertyOptions);
     const [selectedTheoreticalProperty, setSelectedTheoreticalProperty] = useState('fixed');
 
     const [paretoPlot, setParetoPlot] = useState(false);
     const [paretoPoints, setParetoPoints] = useState(10);
 
     useEffect(() => {
+        async function fetchData() {
+            setLoading(true);
+            let templateData = await getTemplates();
+            if (templateData) {
+                let items = [];
+                let activeTemplate = {};                
+                templateData.forEach((t) => {
+                    let item = {};
+                    item.name = t.TemplateName;
+                    item.text = t.TemplateName;
+                    item.data = JSON.parse(t.TemplateJson);
+                    item.default = t.ISDEFULT || false;
+                    if (t.ISDEFULT) {
+                        activeTemplate = item;
+                    }
+                    items.push(item)
+                })
+                setTemplates(items)
+                if (activeTemplate && activeTemplate.name) {
+                    setSelectedTemplate(activeTemplate);
+                    onDataLoad(activeTemplate?.data?.input_json || {})
+                }
+                setLoading(false);
+            } else {
+                setLoading(false);
+                toast('Request failed!', { style: { background: '#333', color: '#fff' } });
+            }
+        }
+        fetchData();
+    }, []);
 
-        if(selectedRunType) {
+    useEffect(() => {
+        if(selectedTemplate && selectedTemplate.name) {
+            setSelectedObjectiveSense(selectedTemplate?.data?.objective_sense);
+            setSelectedObjectiveType(selectedTemplate?.data?.objective_type);
+            onFilterChange('objective_type', selectedTemplate?.data?.objective_type);
+            onFilterChange('objective_sense', selectedTemplate?.data?.objective_sense);
+        }
+        else if (selectedRunType) {
             onFilterChange('run_type', selectedRunType);
             onFilterChange('theoretical_property', 'fixed');
             onFilterChange('objective_type', 'cost');
@@ -78,6 +113,13 @@ const FilterPanel = ({  onFilterChange, onAction }) => {
 
     const handleDropdownChange = (e, filterType) => {
         switch (filterType) {
+            case 'template':
+                var activeTemplate = templates.find(item => item.value === e.target.value);
+                if (activeTemplate && activeTemplate.data) {
+                    setSelectedTemplate(activeTemplate);
+                    onDataLoad(activeTemplate.data?.input_json || {})
+                }
+                break;
             case 'run_type':
                 setSelectedRunType(e.target.value)
                 break;
@@ -118,7 +160,7 @@ const FilterPanel = ({  onFilterChange, onAction }) => {
             alert("Please select the JSON file!")
         } else {
             onFilterChange('action', action);
-            if(selectedRunType === 'optimization' && paretoPlot) {
+            if (selectedRunType === 'optimization' && paretoPlot) {
                 onFilterChange('pareto_points', paretoPoints);
             }
             onAction(action)
@@ -128,12 +170,34 @@ const FilterPanel = ({  onFilterChange, onAction }) => {
 
     return (
         <div>
+            <Toaster position="bottom-center" />
+
+            <h2 className='leftHeader'>Select Templates</h2>
+            <div className="filter-group">
+                <label htmlFor="template">Template : </label>
+                <select id="template" value={selectedTemplate.name} onChange={(e) => handleDropdownChange(e, 'template')}>
+                    {templates.map((option, index) => (
+                        <option key={index} value={option.name}>
+                            {option.text}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {
+                showFileUpload &&
+                <div style={{marginBottom:'70px'}}>
+                    <span><b>OR</b></span>
+                    <FileUploader onFileUpload={onDataLoad}/>
+                </div>
+            }
+
             <h2 className='leftHeader'>Filters</h2>
 
             <div className="filter-group">
                 <label htmlFor="runFilter">Run Type : </label>
                 <select id="runFilter" value={selectedRunType} onChange={(e) => handleDropdownChange(e, 'run_type')}>
-                    {runTypes.map((option, index) => (
+                    {runTypeOptions.map((option, index) => (
                         <option key={index} value={option.value}>
                             {option.text}
                         </option>
@@ -147,7 +211,7 @@ const FilterPanel = ({  onFilterChange, onAction }) => {
                     <option value="">
 
                     </option>
-                    {foamTypes.map((option, index) => (
+                    {foamTypeOptions.map((option, index) => (
                         <option key={index} value={option.value}>
                             {option.text}
                         </option>

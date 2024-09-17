@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Switch, Box, Slider, Typography } from '@mui/material';
 
-const SwitchWithRangeSlider = ({ id, switchOn, label, min, max, range, onUpdate }) => {
-    const [sliderId, setSliderId] = useState(id);
+const SwitchWithRangeSlider = ({ id, switchOn, label, description, units, min, max, range, onUpdate }) => {
+    const [sliderId] = useState(id);
     const [isSwitchOn, setIsSwitchOn] = useState(switchOn);
     const [sliderValue, setSliderValue] = useState(range);
+
+    let newLabel = convertSymbols(label);
 
     useEffect(() => {
         onUpdate(sliderId, isSwitchOn, sliderValue);
     }, []);
+
+    function convertSymbols(text) {
+        // Replace degree notation ($^o$) with the degree symbol (°)
+        text = text.replace('$^o$C', "°C");
+    
+        // Replace superscript notation ($^x$) with HTML superscript <sup>x</sup>
+        text = text.replaceAll('$^3$', "³");
+
+        text = text.replaceAll('(CPS)', "(cps)");
+
+        return text;
+    }
 
     const handleSwitchChange = () => {
         setIsSwitchOn(!isSwitchOn);
@@ -23,7 +37,7 @@ const SwitchWithRangeSlider = ({ id, switchOn, label, min, max, range, onUpdate 
     return (
         <Box sx={{ width: '100%', marginBottom: 5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="body1">{label}:</Typography>
+                <Typography variant="body">{newLabel}:</Typography>
 
                 <Switch
                     checked={isSwitchOn}

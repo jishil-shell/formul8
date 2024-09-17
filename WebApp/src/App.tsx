@@ -1,23 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import MainLayout from './components/MainLayout';
-import { DataProvider } from './context/DataContext';
-import './App.css';
-
-function App() {
-  // const [message, setMessage] = useState("");
-  // useEffect(() => {
-  //   fetch("/api/get-message?name=Static Web Apps")
-  //   .then(res => res.text())
-  //   .then(data => setMessage(data));
-  // }, []);
+import React from "react";
+import MainLayout from "./components/MainLayout";
+import { DataProvider } from "./context/DataContext";
+import { LoaderProvider, useLoader } from "./context/LoaderContext";
+import Loader from "./components/Loader";
+import "./App.css";
+const App = () => {
+  //const { loading } = useLoader();
   return (
-    <DataProvider>
-      <div className="App">
-        <MainLayout />
-      </div>
-    </DataProvider>
-    
+    <LoaderProvider>
+      <DataProvider>
+        <div className="App">
+          <LoaderWrapper />
+          <MainLayout />
+        </div>
+      </DataProvider>
+    </LoaderProvider>
   );
 }
+
+const LoaderWrapper = () => {
+  const { loading } = useLoader(); // Get loading state from context
+  return <Loader open={loading} />; // Pass loading state to Loader's open prop
+};
 
 export default App;

@@ -14,9 +14,13 @@ const ConditionsGrid = ({ jsonData, onGridUpdate }) => {
         let data = [];
         for (var c in conditionsData) {
             if (initialConditions.includes(c)) {
+                let description = conditionsData[c].description || '';
+                if(conditionsData[c].units) {
+                    description += ' (' + conditionsData[c].units + ')';
+                }
                 data.push({
                     key: c,
-                    condition: conditionsData[c].description || "",
+                    condition: description,
                     value: conditionsData[c].value || ""
                 })
             }

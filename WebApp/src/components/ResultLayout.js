@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import DownloadPanel from './DownloadPanel';
 import KeyValueLayout from './KeyValueLayout';
@@ -12,6 +12,8 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
     const [carbonFootprintValue, setCarbonFootprintValue] = useState('');
     const [ingredientsResults, setIngredientsResults] = useState([]);
     const [responseResults, setResponseResults] = useState([]);
+    const [responseResultsPlot, setResponseResultsPlot] = useState([]);
+    const [theoreticalPropertiesResults, setTheoreticalPropertiesResults] = useState([]);
     const [polyolValue, setPolyolValue] = useState({});
     const [nonPolyolValue, setNonPolyolValue] = useState({});
     const [isocyanateValue, setIsocyanateValue] = useState({});
@@ -30,12 +32,30 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
         { headerName: 'Value', field: 'value', editable: false, resizable: true, headerClass: 'header-left-align', cellClass: 'cell-left-align' },
     ]
 
+    const theoreticalPropertiesResultsColumnDefs = [
+        { headerName: 'Ingredient', field: 'ingredient', editable: false, resizable: true, minWidth: 250, headerClass: 'header-left-align', cellClass: 'cell-left-align' }
+    ]
+
+    if(filterValues?.run_type === 'optimization' && filterValues.theoretical_property === "variable") {
+        propertyNames.forEach((item) => {
+            theoreticalPropertiesResultsColumnDefs.push({ headerName: item, field: item, editable: false, resizable: true,  minWidth: 100, headerClass: 'header-left-align', cellClass: 'cell-left-align' });
+        })
+    }
+
+    let costVsCarbonPlotColumnDefs = [];
+    if(filterValues?.action === 'generate_cost_vs_carbon_plot' && resultData.columns) {
+        resultData.columns.forEach((item) => {
+            costVsCarbonPlotColumnDefs.push({ headerName: item, field: item, editable: false, resizable: true,  minWidth: 100, headerClass: 'header-left-align', cellClass: 'cell-left-align' });
+        })
+    }
+
     useEffect(() => {
-        console.log(resultData)
         let ingredientsData = inputData?.ingredients || {};
         let responsesData = inputData?.responses || {};
         let ingredientsResultsList = [];
         let responseResultsList = [];
+        let responseResultsPlotData = [];
+        let theoreticalPropertiesResultsList = [];
         let polyol = {};
         let nonPolyol = {};
         let isocyanate = {};
@@ -63,7 +83,6 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
 
         for (let i in ingredientsData) {
             ++id;
-
             if (resultData?.variables && resultData?.variables['ingredient_quantities[' + i + ']'] && resultData?.variables['ingredient_quantities[' + i + ']'].value > 0) {
                 quantityResult = resultData?.variables['ingredient_quantities[' + i + ']'].value;
             } else {
@@ -87,10 +106,27 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                     nonPolyol[i] = quantityResult.toFixed(2) + ' part by weight';
                 }
             }
+
+            if(filterValues?.run_type === 'optimization' && filterValues.theoretical_property === "variable") {
+                if (resultData?.inputs?.ingredients && resultData?.inputs?.ingredients[i]) {
+                    if(resultData?.inputs?.ingredients[i]?.theoretical && resultData?.inputs?.ingredients[i]?.available) {
+                        let row = {
+                            ingredient : i
+                        }
+                        let key = '';
+                        propertyNames.forEach((item) => {
+                            key = 'ingredient_properties[' + item + ',' + i + ']';
+                            row[item] = resultData?.variables[key] && resultData?.variables[key].value ?  resultData?.variables[key] && resultData?.variables[key].value.toFixed(4) : '0.0000'
+                        })
+                        theoreticalPropertiesResultsList.push(row);
+                    }
+                }
+            }
         }
         setPolyolValue(polyol);
         setNonPolyolValue(nonPolyol);
         setIngredientsResults(ingredientsResultsList);
+        setTheoreticalPropertiesResults(theoreticalPropertiesResultsList);
 
         for (let r in responsesData) {
             let response = responsesData[r]?.latex_label || '';
@@ -100,17 +136,32 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                 response: response,
                 value: value
             })
+
+            responseResultsPlotData.push({
+                "response": r,
+                "label": inputData?.responses[r]?.latex_label,
+                "low_user": inputData?.responses[r]?.low_bound_user,                
+                "high_user": inputData?.responses[r]?.high_bound_user,
+                "active_constraint": inputData?.responses[r]?.active_constraint,
+                "low_absolute": filterValues?.foam_type === 'HRSlab' ? inputData?.responses[r]?.low_bound_hr : inputData?.responses[r]?.low_bound_conv,
+                "high_absolute": filterValues?.foam_type === 'HRSlab' ? inputData?.responses[r]?.high_bound_hr : inputData?.responses[r]?.high_bound_conv,
+                "result": resultData?.expressions && resultData?.expressions[key] && resultData?.expressions[key]?.value ? resultData?.expressions[key]?.value.toFixed(2) : '0.00',
+            })
         }
         setResponseResults(responseResultsList);
+        setResponseResultsPlot(responseResultsPlotData);
 
     }, [inputData, resultData]);
 
     return (
-        (resultData && resultData.expressions) ? (
+        (resultData && (resultData.expressions || resultData.data)) ? (
             filterValues?.action === 'generate_cost_vs_carbon_plot' ? (
                 <>
                     <h3 style={{ textAlign: 'left' }}>Cost Versus Carbon Plot</h3>
-                    <ChartPanel />
+                    
+                    {/* <ChartPanel /> */}
+
+                    <CollapsibleGrid title={'Tabular View of Cost Versus Carbon Plot Data'} columnDefs={costVsCarbonPlotColumnDefs} rowData={resultData.data} gridOpen={true}/>
                 </>
             ) : (
                 <>
@@ -148,7 +199,7 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                             <KeyValueLayout data={isocyanateValue} />
                         </div>
 
-                        <CollapsibleGrid title={'Tabular View of Quantities of All Ingredients'} columnDefs={ingredientsResultsColumnDefs} rowData={ingredientsResults} />
+                        <CollapsibleGrid title={'Tabular View of Quantities of All Ingredients'} columnDefs={ingredientsResultsColumnDefs} rowData={ingredientsResults} gridOpen={true}/>
                     </>
 
                     <SeparatorLine />
@@ -156,9 +207,10 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                     <>
                         <h3 style={{ textAlign: 'left' }}>Foam Properties</h3>
 
+                        {/* <BarChart plot={responseResultsPlot}/> */}
+                        {/* <HorizontalBarChart plot={responseResultsPlot}/> */}
 
-
-                        <CollapsibleGrid title={'Tabular View of Response Results'} columnDefs={responseResultsColumnDefs} rowData={responseResults} />
+                        <CollapsibleGrid title={'Tabular View of Response Results'} columnDefs={responseResultsColumnDefs} rowData={responseResults} gridOpen={true}/>
                     </>
 
                     <SeparatorLine />
@@ -168,7 +220,7 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                         <>
                             <h3 style={{ textAlign: 'left' }}>Theoretical Polyol Property Results</h3>
 
-                            <CollapsibleGrid title={'Theoretical Polyol Property Results'} columnDefs={responseResultsColumnDefs} rowData={responseResults} gridOpen={true} />
+                            <CollapsibleGrid title={'Theoretical Polyol Property Results'} columnDefs={theoreticalPropertiesResultsColumnDefs} rowData={theoreticalPropertiesResults} gridOpen={true} />
                         </>
                     }
 

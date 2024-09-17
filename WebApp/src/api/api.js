@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create an instance of axios
 const api = axios.create({
     baseURL: 'http://172.206.209.198:8000/', // Replace with your API base URL
-    timeout: 10000, // Request timeout
+    timeout: 300000, // Request timeout
     headers: {
       'Content-Type': 'application/json',
       // Add other default headers here if needed
@@ -39,10 +39,22 @@ const api = axios.create({
   export const solverOptimalFormulation = async (data) => {
     try {
       const response = await api.post('/solver', data);
-      return response.data;
+      return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
-      throw error;
+      //throw error;
+      return false;
+    }
+  };
+
+  export const getTemplates = async () => {
+    try {
+      const response = await api.get('/getsolvertemplates');
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      //throw error;
+      return false;
     }
   };
   

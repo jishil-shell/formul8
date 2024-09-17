@@ -3,8 +3,9 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../css/Grid.css';
+import { toast, Toaster } from 'react-hot-toast';
 
-const TheoreticalPropertyGrid = ({ jsonData, onGridUpdate }) => {
+const TheoreticalPropertyGrid = ({ jsonData, onGridUpdate, foamType }) => {
     const [rowData, setRowData] = useState([]);
     let columns = [];
     useEffect(() => {
@@ -41,6 +42,36 @@ const TheoreticalPropertyGrid = ({ jsonData, onGridUpdate }) => {
     const columnDefs = useMemo(() => columns, []);
 
     const onCellValueChanged = (params) => {
+        if(jsonData?.ingredients && jsonData?.ingredients[params.data.ingredient]) {
+            let minValue, maxValue;
+            let columnKey = params.column.colId;
+            columnKey = params.colDef.headerName;
+            minValue = jsonData?.property_bounds_low?.[params.data.ingredient]?.[columnKey] || '';
+            maxValue = jsonData?.property_bounds_high?.[params.data.ingredient]?.[columnKey] || '';
+            let msg = "";
+            if(minValue && maxValue) {
+                if(params.value < minValue || params.value > maxValue) {
+                    msg = "Value should be between "+ minValue + " and "+ maxValue;
+                }
+            } else if(minValue) {
+                if(params.value < minValue) {
+                    msg = "Value should be greater than "+ minValue;
+                }
+            } else if(maxValue) {
+                if(params.value > maxValue) {
+                    msg = "Value should be less than "+ maxValue;
+                }
+            }
+            if(msg) {
+                params.node.setDataValue(params.column.colId, params.oldValue);                
+                return toast(msg, {
+                    style: {
+                        background: '#333',
+                        color: '#fff',  
+                    },
+                });
+            }
+        }
         const updatedData = [...rowData];
         updatedData[params.node.rowIndex][params.colDef.field] = params.value;
         setRowData(updatedData);
@@ -66,6 +97,7 @@ const TheoreticalPropertyGrid = ({ jsonData, onGridUpdate }) => {
                     onGridReady={onGridReady}
                 />
             </div>
+            <Toaster position="bottom-center" />
         </>
 
     );
