@@ -159,7 +159,7 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                 <>
                     <h3 style={{ textAlign: 'left' }}>Cost Versus Carbon Plot</h3>
                     
-                    {/* <ChartPanel /> */}
+                    <ChartPanel title = {'Cost vs. Carbon Footprint'} xName = {'CARBON FOOTPRINT (kgCO2e/Kgfeed)'} yName = {'COST ($/Kgfoam)'} resultData = {resultData}/>
 
                     <CollapsibleGrid title={'Tabular View of Cost Versus Carbon Plot Data'} columnDefs={costVsCarbonPlotColumnDefs} rowData={resultData.data} gridOpen={true}/>
                 </>

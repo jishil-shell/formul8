@@ -26,12 +26,21 @@ const IngredientGrid = ({ runType, jsonData, onGridUpdate }) => {
             })
         }
         setRowData(data);
+        setTimeout(() => {
+            if (gridRef.current) {
+                const api = gridRef.current.api;
+                data.forEach(row => {
+                if (row.selected) {
+                    const rowNode = api.getRowNode(row.id);
+                    if (rowNode) {
+                        rowNode.setSelected(true);
+                    }
+                }
+                });
+            }
+        }, 0);
     }, [jsonData]);
 
-    // Function to determine if a row should be selected based on JSON data
-    const isRowSelected = (params) => {
-        return params.data.selected || false; // Assuming JSON data has an isSelected property
-    };
 
     // Get row ID (useful for handling selection state)
     const getRowNodeId = (data) => data.id; // Assuming each item has a unique `id` field
@@ -87,28 +96,27 @@ const IngredientGrid = ({ runType, jsonData, onGridUpdate }) => {
         
     };
 
-    const onSelectionChanged = () => {
-        const selectedNodes = gridRef.current.api.getSelectedNodes();
-        const selectedRowIds = selectedNodes.map(node => node.data.id);
-        const updatedData = rowData.map(item => {
-            return { ...item, selected: (selectedRowIds.includes(item.id) ? true : false) };
-        });
-        if (JSON.stringify(rowData) !== JSON.stringify(updatedData)) {
-            setRowData(updatedData);
-            onGridUpdate(updatedData);
-            setTimeout(() => {
-                gridRef.current.api.forEachNode((node) => {
-                    node.setSelected(selectedRowIds.includes(node.data.id));
-                });
-            }, 0);;
+    const onSelectionChanged = (event) => {
+        if(event?.source === 'checkboxSelected' || event?.source === 'uiSelectAllFiltered') {
+            const selectedNodes = gridRef.current.api.getSelectedNodes();
+            const selectedRowIds = selectedNodes.map(node => node.data.id);
+            const updatedData = rowData.map(item => {
+                return { ...item, selected: (selectedRowIds.includes(item.id) ? true : false) };
+            });
+            if (JSON.stringify(rowData) !== JSON.stringify(updatedData)) {
+                setRowData(updatedData);
+                onGridUpdate(updatedData);
+                setTimeout(() => {
+                    gridRef.current.api.forEachNode((node) => {
+                        node.setSelected(selectedRowIds.includes(node.data.id));
+                    });
+                }, 0);;
+            }
         }
     };
 
     const onGridReady = (params) => {
         onGridUpdate(rowData);
-        params.api.forEachNode((node) => {
-            node.setSelected(isRowSelected(node));
-        });
     };
 
     return (
@@ -125,7 +133,7 @@ const IngredientGrid = ({ runType, jsonData, onGridUpdate }) => {
                     defaultColDef={{ filter: true, sortable: true }}
                     onCellValueChanged={onCellValueChanged}
                     onGridReady={onGridReady}
-                    onSelectionChanged={() => onSelectionChanged()}
+                    onSelectionChanged={onSelectionChanged}
                     getRowNodeId={getRowNodeId}
                 />
             </div>

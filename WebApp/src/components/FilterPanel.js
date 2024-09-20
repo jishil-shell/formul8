@@ -114,7 +114,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
     const handleDropdownChange = (e, filterType) => {
         switch (filterType) {
             case 'template':
-                var activeTemplate = templates.find(item => item.value === e.target.value);
+                var activeTemplate = templates.find(item => item.name === e.target.value);
                 if (activeTemplate && activeTemplate.data) {
                     setSelectedTemplate(activeTemplate);
                     onDataLoad(activeTemplate.data?.input_json || {})

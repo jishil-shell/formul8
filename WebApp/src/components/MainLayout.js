@@ -16,6 +16,7 @@ import AlertDialog from './AlertDialog';
 import ResultLayout from './ResultLayout';
 import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
+import ChartPanel from './ChartPanel';
 
 const MainLayout = () => {
 
@@ -36,7 +37,7 @@ const MainLayout = () => {
     const [dialogMessage, setDialogMessage] = useState('');
 
     useEffect(() => {
-    }, [refreshKey, activeTab]);
+    }, [refreshKey, activeTab, jsonData]);
 
     const loadData = (jsonData) => {
         setJsonData(jsonData);
@@ -48,6 +49,7 @@ const MainLayout = () => {
             max: jsonData?.conditions?.isoindex_bound_high?.value ? parseFloat(jsonData?.conditions?.isoindex_bound_high?.value) : 0,
         };
         setIsocyanateValues(updatedIsocyanateValues)
+        //setRefreshKey(prevKey => prevKey + 1);
     };
 
     const handleFilterChange = (filterType, filterValue) => {
@@ -265,6 +267,7 @@ const MainLayout = () => {
                     if (result && result.expressions) {
                         setActiveTab(1);
                         setResultData(result);
+                        toast('Optimum solution found!', { style: {background: '#008000', color: '#fff' }});
                     } else {
                         showAlertDialog("No optimal solution found!", "Alert");
                     }
@@ -281,6 +284,7 @@ const MainLayout = () => {
                     if (result && result.expressions) {
                         setActiveTab(1);
                         setResultData(result);
+                        toast('Optimum solution found!', { style: {background: '#008000', color: '#fff' }});
                     } else {
                         showAlertDialog("No optimal solution found!", "Alert");
                     }
@@ -294,6 +298,7 @@ const MainLayout = () => {
                     if (result) {
                         setActiveTab(1);
                         setResultData(result);
+                        toast('Optimum solution found!', { style: {background: '#008000', color: '#fff' }});
                     }
                     setLoading(false);
                 });
@@ -354,7 +359,7 @@ const MainLayout = () => {
                                         <Toaster position="bottom-center" />
                                     </div>
                                     <div>
-
+                                        {/* <ChartPanel title = {'Cost vs. Carbon Footprint'} xName = {'CARBON FOOTPRINT (kgCO2e/Kgfeed)'} yName = {'COST ($/Kgfoam)'}/> */}
                                         <ConditionsGrid jsonData={jsonData} onGridUpdate={handleConditionsInputsChange} />
                                         <SeparatorLine />
                                         <>
