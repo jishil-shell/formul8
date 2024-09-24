@@ -38,11 +38,6 @@ th {
     /* Full width */
 }
 
-/* .ag-theme-alpine .ag-row.ag-row-selected {
-    background-color: #d3d3d3 !important;
-    color: black;
-} */
-
 .header-left-align {
     text-align: left;
 }
@@ -50,3 +45,9 @@ th {
 .cell-left-align {
     text-align: left;
 }
+
+.ag-theme-alpine .ag-checked::after {
+    color: 'rgb(244,116,50)'!important;
+}
+
+  

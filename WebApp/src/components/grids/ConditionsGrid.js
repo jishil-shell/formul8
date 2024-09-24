@@ -3,10 +3,12 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../css/Grid.css';
+import { useData } from '../../context/DataContext';
 
-const ConditionsGrid = ({ jsonData, onGridUpdate }) => {
+const ConditionsGrid = ({ onGridUpdate }) => {
     
     const [rowData, setRowData] = useState([]);
+    const { jsonData, setJsonData } = useData();
 
     useEffect(() => {
         let conditionsData = jsonData?.conditions || {};
@@ -29,19 +31,20 @@ const ConditionsGrid = ({ jsonData, onGridUpdate }) => {
     }, [jsonData]);
 
     const columnDefs = useMemo(() => [
-        { field: 'condition', editable: false, headerName: 'Conditions', resizable: true, headerClass: 'header-left-align', cellClass: 'cell-left-align' },
-        { field: 'value', editable: true, headerName: 'Value', resizable: true, headerClass: 'header-left-align', cellClass: 'cell-left-align' }
+        { field: 'condition', editable: false, headerName: 'Conditions', resizable: true, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'}) },
+        { field: 'value', editable: true, headerName: 'Value', resizable: true, headerClass: 'header-left-align', cellClass: 'cell-left-align'}
     ], []);
 
     const onCellValueChanged = (params) => {
-        const updatedData = [...rowData];
-        updatedData[params.node.rowIndex][params.colDef.field] = params.value;
-        setRowData(updatedData);
-        onGridUpdate(updatedData);
+        onGridUpdate(rowData, 'update');
+        if(jsonData?.conditions && jsonData.conditions[params.data.key] &&  jsonData.conditions[params.data.key].value !== params.value) {
+            jsonData.conditions[params.data.key].value = params.value;
+            setJsonData(jsonData);
+        }
     };
 
     const onGridReady = () => {
-        onGridUpdate(rowData);
+        onGridUpdate(rowData, 'init');
     };
 
     return (

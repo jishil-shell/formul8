@@ -9,14 +9,13 @@ import TabsComponent from './TabsComponent';
 import SeparatorLine from './SeparatorLine';
 import TextInput from './TextInput';
 import './css/MainLayout.css';
-import SwitchWithRangeSlider from './SwitchWithRangeSlider';
 import { Slider, Typography } from '@mui/material';
 import { solverOptimalFormulation } from '../api/api';
 import AlertDialog from './AlertDialog';
 import ResultLayout from './ResultLayout';
 import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
-import ChartPanel from './ChartPanel';
+import ResponseConstraintGrid from './grids/ResponseConstraintGrid';
 
 const MainLayout = () => {
 
@@ -36,9 +35,6 @@ const MainLayout = () => {
     const [dialogTitle, setDialogTitle] = useState('');
     const [dialogMessage, setDialogMessage] = useState('');
 
-    useEffect(() => {
-    }, [refreshKey, activeTab, jsonData]);
-
     const loadData = (jsonData) => {
         setJsonData(jsonData);
         let updatedIsocyanateValues = {
@@ -49,7 +45,6 @@ const MainLayout = () => {
             max: jsonData?.conditions?.isoindex_bound_high?.value ? parseFloat(jsonData?.conditions?.isoindex_bound_high?.value) : 0,
         };
         setIsocyanateValues(updatedIsocyanateValues)
-        //setRefreshKey(prevKey => prevKey + 1);
     };
 
     const handleFilterChange = (filterType, filterValue) => {
@@ -67,12 +62,29 @@ const MainLayout = () => {
         setIsocyanateValues(updatedObj);
     };
 
-    const handleIsocyanateSlideChange = (event, newValue) => {
-        let updatedObj = { ...isocyanateValues, index: newValue };
+    const handleIsocyanateIndexChange = (event) => {
+        let updatedObj = { ...isocyanateValues, index: event.target.value };
         setIsocyanateValues(updatedObj);
     };
 
-    const handleConditionsInputsChange = (data) => {
+    const handleIsocyanateIndexBlur = () => {
+        if(isocyanateValues.index < isocyanateValues.min || isocyanateValues.index > isocyanateValues.max) {
+            let msg = "Value should be between "+ isocyanateValues.min + " and "+ isocyanateValues.max;
+            let updatedObj = { ...isocyanateValues, index: jsonData?.conditions?.isocyanate_index?.value };
+            setIsocyanateValues(updatedObj);            
+            return toast(msg, {
+                style: {
+                    background: '#333',
+                    color: '#fff',  
+                },
+            });
+        } else {
+            jsonData.conditions.isocyanate_index.value = isocyanateValues.index;
+            setJsonData(jsonData);
+        }
+    };
+
+    const handleConditionsInputsChange = (data, action) => {
         setConditionsInputs(data)
     }
 
@@ -80,18 +92,12 @@ const MainLayout = () => {
         setIngredientInputs(data)
     }
 
-    const handleTheoreticalPropertyInputsChange = (data) => {
-        setTheoreticalPropertyInputs(data)
+    const handleResponseConstraintGridChange = (data, action) => {
+        setResponseConstraint(data)
     }
 
-    const handleResponseConstraintChange = (sliderId, switchOn, range) => {
-        let extResponseConstraint = responseConstraint;
-        if (!extResponseConstraint[sliderId]) {
-            extResponseConstraint[sliderId] = {};
-        }
-        extResponseConstraint[sliderId].switchOn = switchOn;
-        extResponseConstraint[sliderId].range = range;
-        setResponseConstraint(extResponseConstraint);
+    const handleTheoreticalPropertyInputsChange = (data) => {
+        setTheoreticalPropertyInputs(data)
     }
 
     const formatRequestData = async () => {
@@ -104,9 +110,7 @@ const MainLayout = () => {
         let updatedInputData = JSON.parse(JSON.stringify(jsonData));
 
         updatedInputData["conditions"]["isocyanate_price"]["value"] = isocyanateValues.price.toString();
-        if (isocyanateValues.isocyanate_index && isocyanateValues.isocyanate_index[0]) {
-            updatedInputData["conditions"]["isocyanate_index"]["value"] = isocyanateValues.isocyanate_index[0].toString();
-        }
+        updatedInputData["conditions"]["isocyanate_index"]["value"] = isocyanateValues.index.toString();
 
         conditionsInputs.forEach((item) => {
             if (updatedInputData["conditions"] && updatedInputData["conditions"][item.key]) {
@@ -120,14 +124,6 @@ const MainLayout = () => {
             updatedInputData["conditions"]['optimization_run'].value = true;
             updatedInputData["conditions"]['single_polyol_per_type'].value = filterValues.polyolType === "single" ? true : false;
             updatedInputData["conditions"]['variable_theoretical_properties'].value = filterValues.theoreticalProperty === "variable" ? true : false;
-
-            for (let r in responseConstraint) {
-                updatedInputData["responses"][r]["active_constraint"] = responseConstraint[r].switchOn;
-                if (responseConstraint[r].switchOn) {
-                    updatedInputData["responses"][r].low_bound_user = responseConstraint[r].range[0];
-                    updatedInputData["responses"][r].high_bound_user = responseConstraint[r].range[1];
-                }
-            }
         } else {
             updatedInputData["conditions"]['optimization_run'].value = false;
             requestData.objective_type = "cost";
@@ -138,7 +134,7 @@ const MainLayout = () => {
             if (item.selected) {
                 updatedInputData["ingredients"][item.ingredient].available = true;
                 updatedInputData["ingredients"][item.ingredient].price = parseFloat(item.price);
-                updatedInputData["ingredients"][item.ingredient].carbon_footprint = parseFloat(item.carbonFootprint);
+                updatedInputData["ingredients"][item.ingredient].carbon_footprint = parseFloat(item.carbon_footprint);
                 if (filterValues?.run_type === 'static') {
                     updatedInputData["ingredients"][item.ingredient].quantity = parseFloat(item.quantity);
                 }
@@ -167,16 +163,16 @@ const MainLayout = () => {
     function removeEmptyColumns(data, columns) {
         let validColumns = [];
         data.forEach(obj => {
-          Object.keys(obj).forEach(key => {
-            if(obj[key] && obj[key] !== "0.00") {
-                if(!validColumns.includes(key)) {
-                    validColumns.push(key)
+            Object.keys(obj).forEach(key => {
+                if (obj[key] && obj[key] !== "0.00") {
+                    if (!validColumns.includes(key)) {
+                        validColumns.push(key)
+                    }
                 }
-            }
-          });
+            });
         });
         return columns.filter(item => validColumns.includes(item));;
-      }
+    }
 
     const plotPareto = async (callback) => {
 
@@ -218,28 +214,30 @@ const MainLayout = () => {
                     minCostParams.carbon_footprint_limit = carbonFootprintLimit;
                     results = await solverOptimalFormulation(minCostParams);
                 }
-                // console.log("Step : " + i + " = " + carbonFootprintLimit);
 
-                row = {
-                    "cost": results?.expressions?.cost_exp?.value.toFixed(0),
-                    "carbon_footprint": results?.expressions?.carbon_footprint_exp?.value.toFixed(0),
-                    "carbon_footprint_limit": carbonFootprintLimit.toFixed(0),
-                    "isocyanate_index": results?.variables?.isocyanate_index?.value.toFixed(2)
-                }
-
-                // eslint-disable-next-line no-loop-func
-                ingredientNames.forEach((inc) => {
-                    let value = results?.variables?.['ingredient_quantities[' + inc + ']']?.value;
-                    if (value && value > 0) {
-                        if (!columnNames.includes(inc)) {
-                            columnNames.push(inc);
-                        }
-                        row[inc] = value.toFixed(2)
-                    } else {
-                        row[inc] = '0.00';
+                if(results?.expressions?.cost_exp?.value) {
+                    row = {
+                        "cost": results?.expressions?.cost_exp?.value.toFixed(0),
+                        "carbon_footprint": results?.expressions?.carbon_footprint_exp?.value.toFixed(0),
+                        "carbon_footprint_limit": carbonFootprintLimit.toFixed(0),
+                        "isocyanate_index": results?.variables?.isocyanate_index?.value.toFixed(2)
                     }
-                })
-                finalList.push(row);
+    
+                    // eslint-disable-next-line no-loop-func
+                    ingredientNames.forEach((inc) => {
+                        let value = results?.variables?.['ingredient_quantities[' + inc + ']']?.value;
+                        if (value && value > 0) {
+                            if (!columnNames.includes(inc)) {
+                                columnNames.push(inc);
+                            }
+                            row[inc] = value.toFixed(2)
+                        } else {
+                            row[inc] = '0.00';
+                        }
+                    })
+                    finalList.push(row);
+                }
+                
             }
 
             columnNames = removeEmptyColumns(finalList, columnNames)
@@ -267,8 +265,9 @@ const MainLayout = () => {
                     if (result && result.expressions) {
                         setActiveTab(1);
                         setResultData(result);
-                        toast('Optimum solution found!', { style: {background: '#008000', color: '#fff' }});
+                        toast('Optimum solution found!', { style: { background: '#008000', color: '#fff' } });
                     } else {
+                        setResultData({});
                         showAlertDialog("No optimal solution found!", "Alert");
                     }
                 } catch (error) {
@@ -284,8 +283,9 @@ const MainLayout = () => {
                     if (result && result.expressions) {
                         setActiveTab(1);
                         setResultData(result);
-                        toast('Optimum solution found!', { style: {background: '#008000', color: '#fff' }});
+                        toast('Optimum solution found!', { style: { background: '#008000', color: '#fff' } });
                     } else {
+                        setResultData({});
                         showAlertDialog("No optimal solution found!", "Alert");
                     }
                 } catch (error) {
@@ -298,7 +298,9 @@ const MainLayout = () => {
                     if (result) {
                         setActiveTab(1);
                         setResultData(result);
-                        toast('Optimum solution found!', { style: {background: '#008000', color: '#fff' }});
+                        toast('Optimum solution found!', { style: { background: '#008000', color: '#fff' } });
+                    } else {
+                        setResultData({});
                     }
                     setLoading(false);
                 });
@@ -320,7 +322,7 @@ const MainLayout = () => {
     };
 
     const saveTemplate = () => {
-        toast('Coming soon!', { style: {background: '#333', color: '#fff' }});
+        toast('Coming soon!', { style: { background: '#333', color: '#fff' } });
     };
 
     return (
@@ -359,9 +361,11 @@ const MainLayout = () => {
                                         <Toaster position="bottom-center" />
                                     </div>
                                     <div>
-                                        {/* <ChartPanel title = {'Cost vs. Carbon Footprint'} xName = {'CARBON FOOTPRINT (kgCO2e/Kgfeed)'} yName = {'COST ($/Kgfoam)'}/> */}
-                                        <ConditionsGrid jsonData={jsonData} onGridUpdate={handleConditionsInputsChange} />
+
+                                        <ConditionsGrid onGridUpdate={handleConditionsInputsChange} />
+
                                         <SeparatorLine />
+
                                         <>
                                             <h3 style={{ textAlign: 'left' }}>Isocyanate Inputs</h3>
                                             <TextInput
@@ -372,58 +376,31 @@ const MainLayout = () => {
                                             {
                                                 filterValues?.run_type === 'static' &&
                                                 <>
-                                                    <span className='leftAlign bold'><b>Isocyanate Index</b></span>
-                                                    <Slider
-                                                        value={[isocyanateValues.index]}
-                                                        onChange={handleIsocyanateSlideChange}
-                                                        valueLabelDisplay="on"
-                                                        min={isocyanateValues.min}
-                                                        max={isocyanateValues.max}
-                                                        sx={{
-                                                            mt: 2,
-                                                            '& .MuiSlider-thumb': {
-                                                                bgcolor: '#282c34',
-                                                            },
-                                                            '& .MuiSlider-track': {
-                                                                bgcolor: '#282c34',
-                                                            },
-                                                            '& .MuiSlider-rail': {
-                                                                bgcolor: '#282c34',
-                                                            },
-                                                        }}
+                                                    <TextInput
+                                                        label="Isocyanate Index"
+                                                        value={isocyanateValues.index}
+                                                        onChange={handleIsocyanateIndexChange}
+                                                        onBlur={handleIsocyanateIndexBlur}
                                                     />
                                                     <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                         <span>Min: {isocyanateValues.min}</span>
                                                         <span>Max: {isocyanateValues.max}</span>
                                                     </Typography>
+
                                                     <SeparatorLine />
                                                 </>
                                             }
 
                                         </>
 
-                                        <IngredientGrid runType={filterValues?.run_type} jsonData={jsonData} onGridUpdate={handleIngredientInputsChange} />
+                                        <IngredientGrid runType={filterValues?.run_type} onGridUpdate={handleIngredientInputsChange} />
 
                                         <SeparatorLine />
 
                                         {
                                             jsonData.responses && filterValues?.run_type === 'optimization' &&
                                             <>
-                                                <h3 style={{ textAlign: 'left' }}>Response Constraint Selection</h3>
-                                                {Object.entries(jsonData.responses).map(([key, details], index) => (
-                                                    <SwitchWithRangeSlider
-                                                        id={key}
-                                                        switchOn={details.active_constraint}
-                                                        description={details.description}
-                                                        units={details.units}
-                                                        label={details.latex_label}
-                                                        min={filterValues.foam_type === 'HRSlab' ? details.low_bound_hr : details.low_bound_conv}
-                                                        max={filterValues.foam_type === 'HRSlab' ? details.high_bound_hr : details.high_bound_conv}
-                                                        range={[details.low_bound_user, details.high_bound_user]}
-                                                        onUpdate={handleResponseConstraintChange}
-                                                    />
-                                                ))}
-
+                                                <ResponseConstraintGrid foamType={filterValues?.foam_type} onGridUpdate={handleResponseConstraintGridChange}/>
                                                 <SeparatorLine />
                                             </>
                                         }
@@ -431,7 +408,7 @@ const MainLayout = () => {
                                         {
                                             filterValues?.theoretical_property === "fixed" &&
                                             <>
-                                                <TheoreticalPropertyGrid jsonData={jsonData} foamType={filterValues?.foam_type} onGridUpdate={handleTheoreticalPropertyInputsChange} />
+                                                <TheoreticalPropertyGrid foamType={filterValues?.foam_type} onGridUpdate={handleTheoreticalPropertyInputsChange} />
                                                 <SeparatorLine />
                                             </>
                                         }

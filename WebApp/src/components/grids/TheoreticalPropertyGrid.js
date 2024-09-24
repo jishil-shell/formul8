@@ -4,9 +4,12 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../css/Grid.css';
 import { toast, Toaster } from 'react-hot-toast';
+import { useData } from '../../context/DataContext';
 
-const TheoreticalPropertyGrid = ({ jsonData, onGridUpdate, foamType }) => {
+const TheoreticalPropertyGrid = ({ onGridUpdate, foamType }) => {
     const [rowData, setRowData] = useState([]);
+    const { jsonData, setJsonData } = useData();
+
     let columns = [];
     useEffect(() => {
         const propertyNames = ['POS', 'SAN', 'SANNEST', 'PIPA', 'HSPIPA', 'PHD', 'SOLIDS', 'Ohbase', 'Ohadj', 'EO', 'Totalweight', 'CFn', 'Cphc', 'Unsat', 'BlowEq', 'GelEq', 'BlowFactor'];
@@ -28,7 +31,7 @@ const TheoreticalPropertyGrid = ({ jsonData, onGridUpdate, foamType }) => {
         }
         setRowData(data);
         columns.push({
-            field: 'ingredient', editable: false, headerName: 'Ingredient', resizable: true, minWidth: 250, headerClass: 'header-left-align', cellClass: 'cell-left-align'
+            field: 'ingredient', editable: false, headerName: 'Ingredient', resizable: true, minWidth: 250, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'})
         })
     
         propertyNames.forEach((item) => {
@@ -70,16 +73,22 @@ const TheoreticalPropertyGrid = ({ jsonData, onGridUpdate, foamType }) => {
                         color: '#fff',  
                     },
                 });
+            } else {
+                if(jsonData?.ingredients[params.data.ingredient] && jsonData?.ingredients[params.data.ingredient][columnKey] !== params.value) {
+                    jsonData.ingredients[params.data.ingredient][columnKey] = parseFloat(params.value);
+                    setJsonData(jsonData);
+                }
             }
         }
         const updatedData = [...rowData];
-        updatedData[params.node.rowIndex][params.colDef.field] = params.value;
+        updatedData[params.node.rowIndex][params.colDef.field] = parseFloat(params.value);
         setRowData(updatedData);
-        onGridUpdate(updatedData);
+        onGridUpdate(updatedData, 'update');
+        
     };
 
     const onGridReady = () => {
-        onGridUpdate(rowData);
+        onGridUpdate(rowData, 'init');
     };
 
     return (

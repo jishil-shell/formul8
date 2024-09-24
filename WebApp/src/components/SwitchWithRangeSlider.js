@@ -8,10 +8,6 @@ const SwitchWithRangeSlider = ({ id, switchOn, label, description, units, min, m
 
     let newLabel = convertSymbols(label);
 
-    useEffect(() => {
-        onUpdate(sliderId, isSwitchOn, sliderValue);
-    }, []);
-
     function convertSymbols(text) {
         // Replace degree notation ($^o$) with the degree symbol (°)
         text = text.replace('$^o$C', "°C");
@@ -26,12 +22,12 @@ const SwitchWithRangeSlider = ({ id, switchOn, label, description, units, min, m
 
     const handleSwitchChange = () => {
         setIsSwitchOn(!isSwitchOn);
-        onUpdate(sliderId, !isSwitchOn, sliderValue);
+        onUpdate(sliderId, !isSwitchOn, sliderValue , 'change');
     };
 
     const handleSliderChange = (event, newValue) => {
         setSliderValue(newValue);
-        onUpdate(sliderId, isSwitchOn, newValue);
+        onUpdate(sliderId, isSwitchOn, newValue, 'change');
     };
 
     return (

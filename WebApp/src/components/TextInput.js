@@ -1,7 +1,7 @@
 import React from 'react';
 import './css/TextInput.css'; // Import custom styles if needed
 
-const TextInput = ({ label, value, onChange, placeholder, disabled = false }) => {
+const TextInput = ({ label, value, onChange, onBlur, placeholder, disabled = false }) => {
     return (
         <div className="text-input-wrapper">
             {label && <label className="text-input-label">{label}</label>}
@@ -9,8 +9,8 @@ const TextInput = ({ label, value, onChange, placeholder, disabled = false }) =>
                 type="text"
                 value={value}
                 onChange={onChange}
+                onBlur={onBlur}
                 placeholder={placeholder}
-                //disabled={disabled}
                 className={`text-input ${disabled ? 'text-input-disabled' : ''}`}
             />
         </div>

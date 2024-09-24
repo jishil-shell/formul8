@@ -36,16 +36,16 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
         { headerName: 'Ingredient', field: 'ingredient', editable: false, resizable: true, minWidth: 250, headerClass: 'header-left-align', cellClass: 'cell-left-align' }
     ]
 
-    if(filterValues?.run_type === 'optimization' && filterValues.theoretical_property === "variable") {
+    if (filterValues?.run_type === 'optimization' && filterValues.theoretical_property === "variable") {
         propertyNames.forEach((item) => {
-            theoreticalPropertiesResultsColumnDefs.push({ headerName: item, field: item, editable: false, resizable: true,  minWidth: 100, headerClass: 'header-left-align', cellClass: 'cell-left-align' });
+            theoreticalPropertiesResultsColumnDefs.push({ headerName: item, field: item, editable: false, resizable: true, minWidth: 100, headerClass: 'header-left-align', cellClass: 'cell-left-align' });
         })
     }
 
     let costVsCarbonPlotColumnDefs = [];
-    if(filterValues?.action === 'generate_cost_vs_carbon_plot' && resultData.columns) {
+    if (filterValues?.action === 'generate_cost_vs_carbon_plot' && resultData.columns) {
         resultData.columns.forEach((item) => {
-            costVsCarbonPlotColumnDefs.push({ headerName: item, field: item, editable: false, resizable: true,  minWidth: 100, headerClass: 'header-left-align', cellClass: 'cell-left-align' });
+            costVsCarbonPlotColumnDefs.push({ headerName: item, field: item, editable: false, resizable: true, minWidth: 100, headerClass: 'header-left-align', cellClass: 'cell-left-align' });
         })
     }
 
@@ -107,16 +107,16 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                 }
             }
 
-            if(filterValues?.run_type === 'optimization' && filterValues.theoretical_property === "variable") {
+            if (filterValues?.run_type === 'optimization' && filterValues.theoretical_property === "variable") {
                 if (resultData?.inputs?.ingredients && resultData?.inputs?.ingredients[i]) {
-                    if(resultData?.inputs?.ingredients[i]?.theoretical && resultData?.inputs?.ingredients[i]?.available) {
+                    if (resultData?.inputs?.ingredients[i]?.theoretical && resultData?.inputs?.ingredients[i]?.available) {
                         let row = {
-                            ingredient : i
+                            ingredient: i
                         }
                         let key = '';
                         propertyNames.forEach((item) => {
                             key = 'ingredient_properties[' + item + ',' + i + ']';
-                            row[item] = resultData?.variables[key] && resultData?.variables[key].value ?  resultData?.variables[key] && resultData?.variables[key].value.toFixed(4) : '0.0000'
+                            row[item] = resultData?.variables[key] && resultData?.variables[key].value ? resultData?.variables[key] && resultData?.variables[key].value.toFixed(4) : '0.0000'
                         })
                         theoreticalPropertiesResultsList.push(row);
                     }
@@ -140,7 +140,7 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
             responseResultsPlotData.push({
                 "response": r,
                 "label": inputData?.responses[r]?.latex_label,
-                "low_user": inputData?.responses[r]?.low_bound_user,                
+                "low_user": inputData?.responses[r]?.low_bound_user,
                 "high_user": inputData?.responses[r]?.high_bound_user,
                 "active_constraint": inputData?.responses[r]?.active_constraint,
                 "low_absolute": filterValues?.foam_type === 'HRSlab' ? inputData?.responses[r]?.low_bound_hr : inputData?.responses[r]?.low_bound_conv,
@@ -157,12 +157,16 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
         (resultData && (resultData.expressions || resultData.data)) ? (
             filterValues?.action === 'generate_cost_vs_carbon_plot' ? (
                 <>
-                    <h3 style={{ textAlign: 'left' }}>Cost Versus Carbon Plot</h3>
-                    
-                    <ChartPanel title = {'Cost vs. Carbon Footprint'} xName = {'CARBON FOOTPRINT (kgCO2e/Kgfeed)'} yName = {'COST ($/Kgfoam)'} resultData = {resultData}/>
+                    <DownloadPanel />
+                    <>
+                        <h3 style={{ textAlign: 'left' }}>Cost Versus Carbon Plot</h3>
 
-                    <CollapsibleGrid title={'Tabular View of Cost Versus Carbon Plot Data'} columnDefs={costVsCarbonPlotColumnDefs} rowData={resultData.data} gridOpen={true}/>
+                        <ChartPanel title={'Cost vs. Carbon Footprint'} xName={'CARBON FOOTPRINT (kgCO2e/Kgfeed)'} yName={'COST ($/Kgfoam)'} resultData={resultData} />
+
+                        <CollapsibleGrid title={'Tabular View of Cost Versus Carbon Plot Data'} columnDefs={costVsCarbonPlotColumnDefs} rowData={resultData.data} gridOpen={true} />
+                    </>
                 </>
+
             ) : (
                 <>
                     <DownloadPanel />
@@ -199,7 +203,7 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                             <KeyValueLayout data={isocyanateValue} />
                         </div>
 
-                        <CollapsibleGrid title={'Tabular View of Quantities of All Ingredients'} columnDefs={ingredientsResultsColumnDefs} rowData={ingredientsResults} gridOpen={true}/>
+                        <CollapsibleGrid title={'Tabular View of Quantities of All Ingredients'} columnDefs={ingredientsResultsColumnDefs} rowData={ingredientsResults} gridOpen={true} />
                     </>
 
                     <SeparatorLine />
@@ -210,7 +214,7 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                         {/* <BarChart plot={responseResultsPlot}/> */}
                         {/* <HorizontalBarChart plot={responseResultsPlot}/> */}
 
-                        <CollapsibleGrid title={'Tabular View of Response Results'} columnDefs={responseResultsColumnDefs} rowData={responseResults} gridOpen={true}/>
+                        <CollapsibleGrid title={'Tabular View of Response Results'} columnDefs={responseResultsColumnDefs} rowData={responseResults} gridOpen={true} />
                     </>
 
                     <SeparatorLine />

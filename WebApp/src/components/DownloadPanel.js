@@ -4,7 +4,7 @@ import { toast, Toaster } from 'react-hot-toast';
 import './css/MainLayout.css';
 
 const DownloadPanel = () => {
-    const { jsonData } = useData();
+    const { resultData } = useData();
 
     const handleDownloadCSV = () => {
         toast('Coming Soon', {
@@ -41,7 +41,7 @@ const DownloadPanel = () => {
 
     const handleDownloadJSON = () => {
         const fileName = "report.json";
-        const json = JSON.stringify(jsonData, null, 2);
+        const json = JSON.stringify(resultData, null, 2);
         const blob = new Blob([json], { type: "application/json" });
         const href = URL.createObjectURL(blob);
         const link = document.createElement("a");

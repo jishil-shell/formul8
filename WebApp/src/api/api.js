@@ -42,18 +42,16 @@ const api = axios.create({
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
-      //throw error;
       return false;
     }
   };
 
-  export const getTemplates = async () => {
+  export const getTemplates = async (data) => {
     try {
-      const response = await api.get('/getsolvertemplates');
+      const response = await api.post('/getsolvertemplates', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
-      //throw error;
       return false;
     }
   };

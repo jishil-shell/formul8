@@ -61,7 +61,12 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
     useEffect(() => {
         async function fetchData() {
             setLoading(true);
-            let templateData = await getTemplates();
+            let userInfo = {
+                "userName": "INJKP0",
+                //"userName": "USYQI0",
+                "appArea": "Formul8"
+            }
+            let templateData = await getTemplates(userInfo);
             if (templateData) {
                 let items = [];
                 let activeTemplate = {};                
