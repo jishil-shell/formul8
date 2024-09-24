@@ -16,9 +16,10 @@ import ResultLayout from './ResultLayout';
 import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
 import ResponseConstraintGrid from './grids/ResponseConstraintGrid';
+import LoginPopup from './LoginPopup';
 
 const MainLayout = () => {
-
+    const { userName, setUserName } = useData();
     const { jsonData, setJsonData } = useData();
     const { resultData, setResultData } = useData();
     const { setLoading } = useLoader();
@@ -68,14 +69,14 @@ const MainLayout = () => {
     };
 
     const handleIsocyanateIndexBlur = () => {
-        if(isocyanateValues.index < isocyanateValues.min || isocyanateValues.index > isocyanateValues.max) {
-            let msg = "Value should be between "+ isocyanateValues.min + " and "+ isocyanateValues.max;
+        if (isocyanateValues.index < isocyanateValues.min || isocyanateValues.index > isocyanateValues.max) {
+            let msg = "Value should be between " + isocyanateValues.min + " and " + isocyanateValues.max;
             let updatedObj = { ...isocyanateValues, index: jsonData?.conditions?.isocyanate_index?.value };
-            setIsocyanateValues(updatedObj);            
+            setIsocyanateValues(updatedObj);
             return toast(msg, {
                 style: {
                     background: '#333',
-                    color: '#fff',  
+                    color: '#fff',
                 },
             });
         } else {
@@ -215,14 +216,14 @@ const MainLayout = () => {
                     results = await solverOptimalFormulation(minCostParams);
                 }
 
-                if(results?.expressions?.cost_exp?.value) {
+                if (results?.expressions?.cost_exp?.value) {
                     row = {
                         "cost": results?.expressions?.cost_exp?.value.toFixed(0),
                         "carbon_footprint": results?.expressions?.carbon_footprint_exp?.value.toFixed(0),
                         "carbon_footprint_limit": carbonFootprintLimit.toFixed(0),
                         "isocyanate_index": results?.variables?.isocyanate_index?.value.toFixed(2)
                     }
-    
+
                     // eslint-disable-next-line no-loop-func
                     ingredientNames.forEach((inc) => {
                         let value = results?.variables?.['ingredient_quantities[' + inc + ']']?.value;
@@ -237,7 +238,7 @@ const MainLayout = () => {
                     })
                     finalList.push(row);
                 }
-                
+
             }
 
             columnNames = removeEmptyColumns(finalList, columnNames)
@@ -325,105 +326,116 @@ const MainLayout = () => {
         toast('Coming soon!', { style: { background: '#333', color: '#fff' } });
     };
 
+    const handleLoginSuccess = (username) => {
+        setUserName(username);
+    };
+
     return (
         <div className="main-layout">
             <Header />
-            <div className="content">
-                <div className="left-panel">
-                    {/* <FileUploader onFileUpload={handleFileUpload} /> */}
-                    <FilterPanel onDataLoad={loadData} onFilterChange={handleFilterChange} onAction={onAction} />
-                </div>
-                <div className="report-panel">
-                    <AlertDialog
-                        open={dialogOpen}
-                        onClose={closeAlertDialog}
-                        message={dialogMessage}
-                        title={dialogTitle}
-                    />
-                    {/* {loading && <LinearProgress style={{ margin: '20px 0' }} />} */}
-                    {(!jsonData || jsonData.length === 0) ? (
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: '100%',
-                            fontSize: '24px',
-                            color: '#888'
-                        }}>
-                            No data available. Please select a template!
+            {!userName ? <LoginPopup onClose={handleLoginSuccess} /> :
+                (
+                    <div className="content">
+                        <div className="left-panel">
+                            {/* <FileUploader onFileUpload={handleFileUpload} /> */}
+                            <FilterPanel onDataLoad={loadData} onFilterChange={handleFilterChange} onAction={onAction} />
                         </div>
-                    ) : (
-                        <>
-                            <TabsComponent tabs={tabs} preferredTab={activeTab}>
-                                <>
-                                    <div className="download-panel">
-                                        <button onClick={saveTemplate}>Save Template</button>
-                                        <Toaster position="bottom-center" />
-                                    </div>
-                                    <div>
-
-                                        <ConditionsGrid onGridUpdate={handleConditionsInputsChange} />
-
-                                        <SeparatorLine />
-
-                                        <>
-                                            <h3 style={{ textAlign: 'left' }}>Isocyanate Inputs</h3>
-                                            <TextInput
-                                                label="Isocyanate Price ($/kg)"
-                                                value={isocyanateValues.price}
-                                                onChange={handleIsocyanatePriceChange}
-                                            />
-                                            {
-                                                filterValues?.run_type === 'static' &&
-                                                <>
-                                                    <TextInput
-                                                        label="Isocyanate Index"
-                                                        value={isocyanateValues.index}
-                                                        onChange={handleIsocyanateIndexChange}
-                                                        onBlur={handleIsocyanateIndexBlur}
-                                                    />
-                                                    <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                        <span>Min: {isocyanateValues.min}</span>
-                                                        <span>Max: {isocyanateValues.max}</span>
-                                                    </Typography>
-
-                                                    <SeparatorLine />
-                                                </>
-                                            }
-
-                                        </>
-
-                                        <IngredientGrid runType={filterValues?.run_type} onGridUpdate={handleIngredientInputsChange} />
-
-                                        <SeparatorLine />
-
-                                        {
-                                            jsonData.responses && filterValues?.run_type === 'optimization' &&
-                                            <>
-                                                <ResponseConstraintGrid foamType={filterValues?.foam_type} onGridUpdate={handleResponseConstraintGridChange}/>
-                                                <SeparatorLine />
-                                            </>
-                                        }
-
-                                        {
-                                            filterValues?.theoretical_property === "fixed" &&
-                                            <>
-                                                <TheoreticalPropertyGrid foamType={filterValues?.foam_type} onGridUpdate={handleTheoreticalPropertyInputsChange} />
-                                                <SeparatorLine />
-                                            </>
-                                        }
-
-                                    </div>
-                                </>
-                                <div>
-                                    <ResultLayout filterValues={filterValues} inputData={jsonData} resultData={resultData} />
+                        <div className="report-panel">
+                            <AlertDialog
+                                open={dialogOpen}
+                                onClose={closeAlertDialog}
+                                message={dialogMessage}
+                                title={dialogTitle}
+                            />
+                            {/* {loading && <LinearProgress style={{ margin: '20px 0' }} />} */}
+                            {(!jsonData || jsonData.length === 0) ? (
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    height: '100%',
+                                    fontSize: '24px',
+                                    color: '#888'
+                                }}>
+                                    No data available. Please select a template!
                                 </div>
-                            </TabsComponent>
-                        </>
-                    )}
+                            ) : (
+                                <>
+                                    <TabsComponent tabs={tabs} preferredTab={activeTab}>
+                                        <>
+                                            <div className="download-panel">
+                                                <button onClick={saveTemplate}>Save Template</button>
+                                                <Toaster position="bottom-center" />
+                                            </div>
+                                            <div>
 
-                </div>
-            </div>
+                                                <ConditionsGrid onGridUpdate={handleConditionsInputsChange} />
+
+                                                <SeparatorLine />
+
+                                                <>
+                                                    <h3 style={{ textAlign: 'left' }}>Isocyanate Inputs</h3>
+                                                    <TextInput
+                                                        label="Isocyanate Price ($/kg)"
+                                                        value={isocyanateValues.price}
+                                                        onChange={handleIsocyanatePriceChange}
+                                                    />
+                                                    {
+                                                        filterValues?.run_type === 'static' &&
+                                                        <>
+                                                            <TextInput
+                                                                label="Isocyanate Index"
+                                                                value={isocyanateValues.index}
+                                                                onChange={handleIsocyanateIndexChange}
+                                                                onBlur={handleIsocyanateIndexBlur}
+                                                            />
+                                                            <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span>Min: {isocyanateValues.min}</span>
+                                                                <span>Max: {isocyanateValues.max}</span>
+                                                            </Typography>
+
+                                                            <SeparatorLine />
+                                                        </>
+                                                    }
+
+                                                </>
+
+                                                <IngredientGrid runType={filterValues?.run_type} onGridUpdate={handleIngredientInputsChange} />
+
+                                                <SeparatorLine />
+
+                                                {
+                                                    jsonData.responses && filterValues?.run_type === 'optimization' &&
+                                                    <>
+                                                        <ResponseConstraintGrid foamType={filterValues?.foam_type} onGridUpdate={handleResponseConstraintGridChange} />
+                                                        <SeparatorLine />
+                                                    </>
+                                                }
+
+                                                {
+                                                    filterValues?.theoretical_property === "fixed" &&
+                                                    <>
+                                                        <TheoreticalPropertyGrid foamType={filterValues?.foam_type} onGridUpdate={handleTheoreticalPropertyInputsChange} />
+                                                        <SeparatorLine />
+                                                    </>
+                                                }
+
+                                            </div>
+                                        </>
+                                        <div>
+                                            <ResultLayout filterValues={filterValues} inputData={jsonData} resultData={resultData} />
+                                        </div>
+                                    </TabsComponent>
+                                </>
+                            )}
+
+                        </div>
+                    </div>
+                )
+
+
+            }
+
         </div>
     );
 };

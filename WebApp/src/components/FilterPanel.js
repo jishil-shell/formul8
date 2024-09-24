@@ -12,6 +12,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
 
     const { jsonData } = useData();
     const { setLoading } = useLoader();
+    const { userName } = useData();
     const [showFileUpload] = useState(true);
 
     const runTypeOptions = [
@@ -62,8 +63,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
         async function fetchData() {
             setLoading(true);
             let userInfo = {
-                "userName": "INJKP0",
-                //"userName": "USYQI0",
+                "userName": userName,
                 "appArea": "Formul8"
             }
             let templateData = await getTemplates(userInfo);
