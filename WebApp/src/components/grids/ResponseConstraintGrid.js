@@ -18,11 +18,12 @@ const ResponseConstraintGrid = ({ foamType, onGridUpdate }) => {
         let selectedRowIds = [];
         for (var i in responsesData) {
             ++id;
+            let label = convertSymbols(responsesData[i].latex_label);
             data.push({
                 id: id,
                 response: i,
                 description: responsesData[i].description,
-                label: responsesData[i].latex_label,
+                label: label,
                 units: responsesData[i].units,
                 min: foamType === 'HRSlab' ? responsesData[i].low_bound_hr.toFixed(2) : responsesData[i].low_bound_conv.toFixed(2),
                 max: foamType === 'HRSlab' ? responsesData[i].high_bound_hr.toFixed(2) : responsesData[i].high_bound_conv.toFixed(2),
@@ -44,6 +45,18 @@ const ResponseConstraintGrid = ({ foamType, onGridUpdate }) => {
         }, 0);
     }, [jsonData]);
 
+    function convertSymbols(text) {
+        // Replace degree notation ($^o$) with the degree symbol (°)
+        text = text.replaceAll('$^o$C', "°C");
+    
+        // Replace superscript notation ($^x$) with HTML superscript <sup>x</sup>
+        text = text.replaceAll('$^3$', "³");
+
+        text = text.replaceAll('(CPS)', "(cps)");
+
+        return text;
+    }
+
 
     // Get row ID (useful for handling selection state)
     const getRowNodeId = (data) => data.id; // Assuming each item has a unique `id` field
@@ -59,11 +72,11 @@ const ResponseConstraintGrid = ({ foamType, onGridUpdate }) => {
                 headerCheckboxSelectionFilteredOnly: true,
                 cellStyle: { textAlign: 'center', backgroundColor: '#FFF' }
             },
-            { field: 'response', editable: false, headerName: 'Response', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'}) },
-            { field: 'min', editable: false, headerName: 'Min', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'}) },
-            { field: 'max', editable: false, headerName: 'Max', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'}) },
-            { field: 'low_bound_user', editable: true, headerName: 'Low Bound', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#FFF'}) },
-            { field: 'high_bound_user', editable: true, headerName: 'High Bound', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#FFF'})}
+            { field: 'label', editable: false, headerName: 'Response', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'}) },
+            { field: 'min', editable: false, headerName: 'Min', resizable: true, flex: 1, maxWidth:120, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'}) },
+            { field: 'max', editable: false, headerName: 'Max', resizable: true, flex: 1, maxWidth:120, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#E5E4E2'}) },
+            { field: 'low_bound_user', editable: true, headerName: 'Optimization Low Bound', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#FFF'}) },
+            { field: 'high_bound_user', editable: true, headerName: 'Optimization Upper Bound', resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', cellStyle: params => ({backgroundColor: '#FFF'})}
         ];
 
         return columns;
