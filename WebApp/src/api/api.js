@@ -55,6 +55,36 @@ const api = axios.create({
       return false;
     }
   };
+
+  export const checkTemplateApi = async (data) => {
+    try {
+      const response = await api.get('/checktemplatename', {params : data});
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      return false;
+    }
+  };
+
+  export const saveTemplateApi = async (data) => {
+    try {
+      const response = await api.post('/savetemplate', data);
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      return false;
+    }
+  };
+
+  export const deleteTemplateApi = async (data) => {
+    try {
+      const response = await api.post('/deletetemplate', data);
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      return false;
+    }
+  };
   
   // Add more API calls as needed
   

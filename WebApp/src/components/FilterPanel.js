@@ -8,12 +8,26 @@ import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
 import FileUploader from './FileUploader';
 
-const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
+const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
 
     const { jsonData } = useData();
-    const { setLoading } = useLoader();
     const { userName } = useData();
-    const [showFileUpload] = useState(true);
+    const { setResultData } = useData();
+    const { selectedTemplate, setSelectedTemplate } = useData();
+    const [showFileUpload] = useState(false);
+    const { setLoading } = useLoader();
+
+    const [templates, setTemplates] = useState([]);
+
+    const [selectedRunType, setSelectedRunType] = useState('optimization');
+    const [selectedFoamType, setSelectedFoamType] = useState('HRSlab');
+    const [selectedObjectiveType, setSelectedObjectiveType] = useState('cost');
+    const [selectedObjectiveSense, setSelectedObjectiveSense] = useState('max');
+    const [selectedPolyolType, setSelectedPolyolType] = useState('multiple');
+    const [selectedTheoreticalProperty, setSelectedTheoreticalProperty] = useState('fixed');
+
+    const [paretoPlot, setParetoPlot] = useState(false);
+    const [paretoPoints, setParetoPoints] = useState(10);
 
     const runTypeOptions = [
         { value: 'optimization', text: 'Optimization' },
@@ -46,19 +60,6 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
         { value: 'variable', text: 'Variable' }
     ];
 
-    const [templates, setTemplates] = useState([]);
-    const [selectedTemplate, setSelectedTemplate] = useState({});
-
-    const [selectedRunType, setSelectedRunType] = useState('optimization');
-    const [selectedFoamType, setSelectedFoamType] = useState('HRSlab');
-    const [selectedObjectiveType, setSelectedObjectiveType] = useState('cost');
-    const [selectedObjectiveSense, setSelectedObjectiveSense] = useState('max');
-    const [selectedPolyolType, setSelectedPolyolType] = useState('multiple');
-    const [selectedTheoreticalProperty, setSelectedTheoreticalProperty] = useState('fixed');
-
-    const [paretoPlot, setParetoPlot] = useState(false);
-    const [paretoPoints, setParetoPoints] = useState(10);
-
     useEffect(() => {
         async function fetchData() {
             setLoading(true);
@@ -76,6 +77,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
                     item.text = t.TemplateName;
                     item.data = JSON.parse(t.TemplateJson);
                     item.default = t.ISDEFULT || false;
+                    item.generic = t.isGeneric || false;
                     if (t.ISDEFULT) {
                         activeTemplate = item;
                     }
@@ -83,6 +85,10 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
                 })
                 setTemplates(items)
                 if (activeTemplate && activeTemplate.name) {
+                    setSelectedTemplate(activeTemplate);
+                    onDataLoad(activeTemplate?.data?.input_json || {})
+                } else {
+                    activeTemplate = items[0];
                     setSelectedTemplate(activeTemplate);
                     onDataLoad(activeTemplate?.data?.input_json || {})
                 }
@@ -122,7 +128,8 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction }) => {
                 var activeTemplate = templates.find(item => item.name === e.target.value);
                 if (activeTemplate && activeTemplate.data) {
                     setSelectedTemplate(activeTemplate);
-                    onDataLoad(activeTemplate.data?.input_json || {})
+                    onDataLoad(activeTemplate.data?.input_json || {});
+                    setResultData({});
                 }
                 break;
             case 'run_type':

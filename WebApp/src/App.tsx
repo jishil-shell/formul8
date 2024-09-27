@@ -4,15 +4,18 @@ import { DataProvider } from "./context/DataContext";
 import { LoaderProvider, useLoader } from "./context/LoaderContext";
 import Loader from "./components/Loader";
 import "./App.css";
+import { ModalProvider } from "./context/ModalContext";
+
 const App = () => {
-  //const { loading } = useLoader();
   return (
     <LoaderProvider>
       <DataProvider>
+      <ModalProvider>
         <div className="App">
           <LoaderWrapper />
           <MainLayout />
         </div>
+        </ModalProvider>
       </DataProvider>
     </LoaderProvider>
   );

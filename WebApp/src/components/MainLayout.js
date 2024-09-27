@@ -9,20 +9,26 @@ import TabsComponent from './TabsComponent';
 import SeparatorLine from './SeparatorLine';
 import TextInput from './TextInput';
 import './css/MainLayout.css';
-import { Slider, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { solverOptimalFormulation } from '../api/api';
-import AlertDialog from './AlertDialog';
 import ResultLayout from './ResultLayout';
 import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
 import ResponseConstraintGrid from './grids/ResponseConstraintGrid';
 import LoginPopup from './LoginPopup';
+import CustomAreaChart from './AreaChart';
+import { saveTemplateApi, deleteTemplateApi } from '../api/api';
+import TemplateNamePopup from './TemplateNamePopup';
+import { useModal } from '../context/ModalContext';
 
 const MainLayout = () => {
     const { userName, setUserName } = useData();
     const { jsonData, setJsonData } = useData();
     const { resultData, setResultData } = useData();
+    const { selectedTemplate } = useData();
     const { setLoading } = useLoader();
+    const { openModal } = useModal();
+
     const tabs = ['Inputs', 'Results'];
     const [activeTab, setActiveTab] = useState(0);
     const [filterValues, setFilterValues] = useState({});
@@ -32,9 +38,7 @@ const MainLayout = () => {
     const [ingredientInputs, setIngredientInputs] = useState({});
     const [theoreticalPropertyInputs, setTheoreticalPropertyInputs] = useState({});
     const [responseConstraint, setResponseConstraint] = useState({});
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [dialogTitle, setDialogTitle] = useState('');
-    const [dialogMessage, setDialogMessage] = useState('');
+    const [showTemplateNamePopup, setShowTemplateNamePopup] = useState(false);
 
     const loadData = (jsonData) => {
         setJsonData(jsonData);
@@ -269,7 +273,10 @@ const MainLayout = () => {
                         toast('Optimum solution found!', { style: { background: '#008000', color: '#fff' } });
                     } else {
                         setResultData({});
-                        showAlertDialog("No optimal solution found!", "Alert");
+                        openModal({
+                            title: 'Oops!',
+                            message: 'No optimal solution found!'
+                        });
                     }
                 } catch (error) {
                     console.error('Request failed:', error);
@@ -287,7 +294,10 @@ const MainLayout = () => {
                         toast('Optimum solution found!', { style: { background: '#008000', color: '#fff' } });
                     } else {
                         setResultData({});
-                        showAlertDialog("No optimal solution found!", "Alert");
+                        openModal({
+                            title: 'Oops!',
+                            message: 'No optimal solution found!'
+                        });
                     }
                 } catch (error) {
                     console.error('Request failed:', error);
@@ -312,22 +322,77 @@ const MainLayout = () => {
         }
     }
 
-    const showAlertDialog = (message, title) => {
-        setDialogMessage(message);
-        setDialogTitle(title);
-        setDialogOpen(true);
+    const newTemplate = async () => {
+        console.log('selectedTemplate : ' + selectedTemplate);
+        setShowTemplateNamePopup(true)
     };
 
-    const closeAlertDialog = () => {
-        setDialogOpen(false);
+    const updateTemplate = async () => {
+        openModal({
+            title: 'Default Template',
+            message: 'Do want to make this template as default template?',
+            positiveButtonText: 'Yes',
+            negativeButtonText: 'No',
+            onAction: async () => {
+                setLoading(true);
+                let requestInfo = {
+                    TemplateName: selectedTemplate.name,
+                    TemplateJson: await formatRequestData(),
+                    ISDEFULT: selectedTemplate.default,
+                    CreatedBY: userName,
+                    IsActive: true
+                }
+                let response = await saveTemplateApi(requestInfo);
+                setLoading(false);
+                if (response) {
+                    window.location.reload();
+                }
+            }
+        });
     };
 
-    const saveTemplate = () => {
-        toast('Coming soon!', { style: { background: '#333', color: '#fff' } });
+    const deleteTemplate = async () => {
+        openModal({
+            title: 'Delete Template',
+            message: 'Are you sure you want to delete this template?',
+            positiveButtonText: 'Yes',
+            negativeButtonText: 'No',
+            onAction: async () => {
+                setLoading(true);
+                let requestInfo = {
+                    "Template_Name": selectedTemplate.name,
+                    "appArea": "Formul8"
+                }
+                let response = await deleteTemplateApi(requestInfo);
+                setLoading(false);
+                if (response) {
+                    window.location.reload();
+                }
+            }
+        });
     };
 
     const handleLoginSuccess = (username) => {
         setUserName(username);
+    };
+
+    const TemplateNamePopupResponse = async (templateName, isDefault) => {
+        setShowTemplateNamePopup(false)
+        if (templateName) {
+            setLoading(true);
+            let requestInfo = {
+                TemplateName: templateName,
+                TemplateJson: await formatRequestData(),
+                ISDEFULT: isDefault,
+                CreatedBY: userName,
+                IsActive: true
+            }
+            let response = await saveTemplateApi(requestInfo);
+            setLoading(false);
+            if (response) {
+                window.location.reload();
+            }
+        }
     };
 
     return (
@@ -338,14 +403,12 @@ const MainLayout = () => {
                     <div className="content">
                         <div className="left-panel">
                             {/* <FileUploader onFileUpload={handleFileUpload} /> */}
-                            <FilterPanel onDataLoad={loadData} onFilterChange={handleFilterChange} onAction={onAction} />
+                            <FilterPanel onDataLoad={loadData} onFilterChange={handleFilterChange} onAction={onAction} reload={refreshKey} />
                         </div>
                         <div className="report-panel">
-                            <AlertDialog
-                                open={dialogOpen}
-                                onClose={closeAlertDialog}
-                                message={dialogMessage}
-                                title={dialogTitle}
+                            <TemplateNamePopup
+                                show={showTemplateNamePopup}
+                                onClose={TemplateNamePopupResponse}
                             />
                             {/* {loading && <LinearProgress style={{ margin: '20px 0' }} />} */}
                             {(!jsonData || jsonData.length === 0) ? (
@@ -364,11 +427,19 @@ const MainLayout = () => {
                                     <TabsComponent tabs={tabs} preferredTab={activeTab}>
                                         <>
                                             <div className="download-panel">
-                                                <button onClick={saveTemplate}>Save Template</button>
+                                                <button onClick={newTemplate}>Create New Template</button>
+                                                {
+                                                    !selectedTemplate.generic && (
+                                                        <>
+                                                            <button onClick={updateTemplate}>Update Template</button>
+                                                            <button onClick={deleteTemplate}>Delete Template</button>
+                                                        </>
+                                                    )
+                                                }
+
                                                 <Toaster position="bottom-center" />
                                             </div>
                                             <div>
-
                                                 <ConditionsGrid onGridUpdate={handleConditionsInputsChange} />
 
                                                 <SeparatorLine />
