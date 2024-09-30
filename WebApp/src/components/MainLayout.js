@@ -4,7 +4,6 @@ import ConditionsGrid from './grids/ConditionsGrid';
 import IngredientGrid from './grids/IngredientGrid';
 import TheoreticalPropertyGrid from './grids/TheoreticalPropertyGrid';
 import Header from './Header';
-import { useData } from '../context/DataContext';
 import TabsComponent from './TabsComponent';
 import SeparatorLine from './SeparatorLine';
 import TextInput from './TextInput';
@@ -16,18 +15,20 @@ import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
 import ResponseConstraintGrid from './grids/ResponseConstraintGrid';
 import LoginPopup from './LoginPopup';
-import CustomAreaChart from './AreaChart';
 import { saveTemplateApi, deleteTemplateApi } from '../api/api';
 import TemplateNamePopup from './TemplateNamePopup';
 import { useModal } from '../context/ModalContext';
+import { useUserContext } from '../context/UserContext';
+import { useDataContext } from '../context/DataContext';
+
 
 const MainLayout = () => {
-    const { userName, setUserName } = useData();
-    const { jsonData, setJsonData } = useData();
-    const { resultData, setResultData } = useData();
-    const { selectedTemplate } = useData();
+    const { jsonData, setJsonData } = useDataContext();
+    const { resultData, setResultData } = useDataContext();
+    const { selectedTemplate } = useDataContext();
     const { setLoading } = useLoader();
     const { openModal } = useModal();
+    const { user, loginUser } = useUserContext();
 
     const tabs = ['Inputs', 'Results'];
     const [activeTab, setActiveTab] = useState(0);
@@ -339,7 +340,7 @@ const MainLayout = () => {
                     TemplateName: selectedTemplate.name,
                     TemplateJson: await formatRequestData(),
                     ISDEFULT: selectedTemplate.default,
-                    CreatedBY: userName,
+                    CreatedBY: user?.username || '',
                     IsActive: true
                 }
                 let response = await saveTemplateApi(requestInfo);
@@ -373,7 +374,7 @@ const MainLayout = () => {
     };
 
     const handleLoginSuccess = (username) => {
-        setUserName(username);
+        loginUser({username : username})
     };
 
     const TemplateNamePopupResponse = async (templateName, isDefault) => {
@@ -384,7 +385,7 @@ const MainLayout = () => {
                 TemplateName: templateName,
                 TemplateJson: await formatRequestData(),
                 ISDEFULT: isDefault,
-                CreatedBY: userName,
+                CreatedBY: user?.username || '',
                 IsActive: true
             }
             let response = await saveTemplateApi(requestInfo);
@@ -398,7 +399,7 @@ const MainLayout = () => {
     return (
         <div className="main-layout">
             <Header />
-            {!userName ? <LoginPopup onClose={handleLoginSuccess} /> :
+            {!user.username ? <LoginPopup onClose={handleLoginSuccess} /> :
                 (
                     <div className="content">
                         <div className="left-panel">
@@ -503,8 +504,6 @@ const MainLayout = () => {
                         </div>
                     </div>
                 )
-
-
             }
 
         </div>

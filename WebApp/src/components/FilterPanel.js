@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useData } from '../context/DataContext';
+import { useDataContext } from '../context/DataContext';
 import './css/Common.css';
 import './css/Filter.css';
 import NumberInputWithButton from './NumberInputWithButton';
@@ -7,16 +7,18 @@ import { getTemplates } from '../api/api';
 import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
 import FileUploader from './FileUploader';
+import { useUserContext } from '../context/UserContext';
 
 const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
 
-    const { jsonData } = useData();
-    const { userName } = useData();
-    const { setResultData } = useData();
-    const { selectedTemplate, setSelectedTemplate } = useData();
+    const { jsonData } = useDataContext();
+    const { setResultData } = useDataContext();
+    const { selectedTemplate, setSelectedTemplate } = useDataContext();
+    const { user } = useUserContext();
+
+
     const [showFileUpload] = useState(false);
     const { setLoading } = useLoader();
-
     const [templates, setTemplates] = useState([]);
 
     const [selectedRunType, setSelectedRunType] = useState('optimization');
@@ -64,7 +66,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
         async function fetchData() {
             setLoading(true);
             let userInfo = {
-                "userName": userName,
+                "userName": user?.username || '',
                 "appArea": "Formul8"
             }
             let templateData = await getTemplates(userInfo);

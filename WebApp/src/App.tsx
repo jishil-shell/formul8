@@ -5,21 +5,24 @@ import { LoaderProvider, useLoader } from "./context/LoaderContext";
 import Loader from "./components/Loader";
 import "./App.css";
 import { ModalProvider } from "./context/ModalContext";
+import { UserProvider } from "./context/UserContext";
 
 const App = () => {
   return (
     <LoaderProvider>
-      <DataProvider>
-      <ModalProvider>
-        <div className="App">
-          <LoaderWrapper />
-          <MainLayout />
-        </div>
-        </ModalProvider>
-      </DataProvider>
+      <UserProvider>
+        <DataProvider>
+          <ModalProvider>
+            <div className="App">
+              <LoaderWrapper />
+              <MainLayout />
+            </div>
+          </ModalProvider>
+        </DataProvider>
+      </UserProvider>
     </LoaderProvider>
   );
-}
+};
 
 const LoaderWrapper = () => {
   const { loading } = useLoader(); // Get loading state from context

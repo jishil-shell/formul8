@@ -3,13 +3,13 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../css/Grid.css';
-import { useData } from '../../context/DataContext';
+import { useDataContext } from '../../context/DataContext';
 import { toast, Toaster } from 'react-hot-toast';
 
 const ResponseConstraintGrid = ({ foamType, onGridUpdate }) => {
     const gridRef = useRef();
     let [rowData, setRowData] = useState([]);
-    const { jsonData, setJsonData } = useData();
+    const { jsonData, setJsonData } = useDataContext();
 
     useEffect(() => {
         let responsesData = jsonData?.responses || {};

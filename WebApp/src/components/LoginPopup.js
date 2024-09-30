@@ -6,7 +6,6 @@ const userList = ['INJKP0', 'USJLIH', 'USYQI0', 'INSNLD', 'USDGBF', 'INSATD'];
 
 const LoginPopup = ({ onClose }) => {
   const [username, setUsername] = useState('');
-  //const [password, setPassword] = useState('');
 
   const handleLogin = () => {
     if (userList.includes(username.toLocaleUpperCase())) {
@@ -28,12 +27,6 @@ const LoginPopup = ({ onClose }) => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
-          {/* <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        /> */}
         </div>
         <div className='actions'>
           <button onClick={handleLogin}>Start</button>

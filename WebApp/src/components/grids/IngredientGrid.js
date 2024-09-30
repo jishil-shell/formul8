@@ -3,17 +3,20 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../css/Grid.css';
-import { useData } from '../../context/DataContext';
-import { colors } from '@mui/material';
+import { useDataContext } from '../../context/DataContext';
+import { useModal } from '../../context/ModalContext';
 
 const IngredientGrid = ({ runType, onGridUpdate }) => {
     const gridRef = useRef();
+    const { openModal } = useModal();
     let [rowData, setRowData] = useState([]);
-    const { jsonData, setJsonData } = useData();
+    const [referenceRowData, setReferenceRowData] = useState([]);
+    const { jsonData, setJsonData } = useDataContext();
 
     useEffect(() => {
         let ingredientsData = jsonData?.ingredients || {};
         let data = [];
+        let refData = [];
         let id = 0;
         let selectedRowIds = [];
         for (var i in ingredientsData) {
@@ -31,8 +34,10 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
             if (ingredientsData[i].available) {
                 selectedRowIds.push(id)
             }
+            refData.push({name : i, ...ingredientsData[i]})
         }
         setRowData(data);
+        setReferenceRowData(refData);
         setTimeout(() => {
             if (gridRef.current) {
                 gridRef.current.api.forEachNode((node) => {
@@ -79,6 +84,15 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
         }
         return columns;
     }, [runType]);
+
+    const referenceColumnDefs = useMemo(() => {
+        let columnNames = ['name',...Object.keys(jsonData.ingredients[Object.keys(jsonData?.ingredients)[0]])];
+        let columns = [];
+        columnNames.forEach((item) => {
+            columns.push({ field: item, editable: false, headerName: item.toUpperCase(), resizable: true, flex: 1, headerClass: 'header-left-align', cellClass: 'cell-left-align', minWidth:150 })
+        })
+        return columns;
+    }, []);
 
     const onCellValueChanged = (params) => {
         const selectedNodes = gridRef.current.api.getSelectedNodes();
@@ -135,9 +149,24 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
         onGridUpdate(rowData, 'init');
     };
 
+    const referenceInfoClick = () => {
+        openModal({
+            title: 'Ingredients Info',
+            grid: true,
+            showClose: true,
+            columnDefs: referenceColumnDefs,
+            rowData: referenceRowData
+        });
+    };
+
     return (
         <>
-            <h3 style={{ textAlign: 'left' }}>Ingredient Inputs</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px' }}>
+                <h3 style={{ textAlign: 'left' }}>Ingredient Inputs</h3>
+                <button className="reference-info-button" onClick={referenceInfoClick}>
+                    Reference Info
+                </button>
+            </div>
             <div className="ag-theme-alpine" style={{ height: '500px', width: '100%' }}>
                 <AgGridReact
                     ref={gridRef}

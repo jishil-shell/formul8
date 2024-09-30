@@ -4,11 +4,11 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../css/Grid.css';
 import { toast, Toaster } from 'react-hot-toast';
-import { useData } from '../../context/DataContext';
+import { useDataContext } from '../../context/DataContext';
 
 const TheoreticalPropertyGrid = ({ onGridUpdate, foamType }) => {
     const [rowData, setRowData] = useState([]);
-    const { jsonData, setJsonData } = useData();
+    const { jsonData, setJsonData } = useDataContext();
 
     let columns = [];
     useEffect(() => {

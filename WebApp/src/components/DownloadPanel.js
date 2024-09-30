@@ -1,10 +1,10 @@
 import React from 'react';
-import { useData } from '../context/DataContext';
+import { useDataContext } from '../context/DataContext';
 import { toast, Toaster } from 'react-hot-toast';
 import './css/MainLayout.css';
 
 const DownloadPanel = () => {
-    const { resultData } = useData();
+    const { resultData } = useDataContext();
 
     const handleDownloadCSV = () => {
         toast('Coming Soon', {

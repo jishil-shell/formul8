@@ -50,4 +50,9 @@ th {
     color: 'rgb(244,116,50)'!important;
 }
 
+.reference-info-button {
+    padding: 5px 20px;
+    border: 1px solid;
+    border-radius: 5px;
+}
   
