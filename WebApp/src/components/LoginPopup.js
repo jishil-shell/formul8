@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import './css/Popup.css';
 import { toast, Toaster } from 'react-hot-toast';
 
-const userList = ['INJKP0', 'USJLIH', 'USYQI0', 'INSNLD', 'USDGBF', 'INSATD'];
+const userList = ['INJKP0', 'USJLIH', 'USYQI0', 'INSNLD', 'USDGBF', 'INSATD', 'LLEEE3', 'SGTKYE01'];
+ 
 
 const LoginPopup = ({ onClose }) => {
   const [username, setUsername] = useState('');

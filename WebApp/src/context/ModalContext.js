@@ -28,6 +28,19 @@ export const ModalProvider = ({ children }) => {
         }
     };
 
+    const exportData = () => {
+        const fileName = modalContent?.title+".json";
+        const json = JSON.stringify(modalContent?.rowData, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const href = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <ModalContext.Provider value={{ isOpen, openModal, closeModal }}>
             {children}
@@ -58,7 +71,7 @@ export const ModalProvider = ({ children }) => {
                         onClick={() => setIsOpen(false)}
                         style={{
                             position: 'absolute',
-                            top: '10px',
+                            top: '0px',
                             right: '10px',
                             background: 'transparent',
                             border: 'none',
@@ -71,7 +84,17 @@ export const ModalProvider = ({ children }) => {
                 }
 
 
-                <h2>{modalContent?.title}</h2>
+                <dv style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px' }}>
+                    <h2>{modalContent?.title}</h2>
+                    {
+                        modalContent?.grid && (
+                            <button className="reference-info-button" onClick={exportData}>
+                                Export Data
+                            </button>
+                        )
+                    }
+                </dv>
+
                 {
                     modalContent?.grid ? (
                         <div className="ag-theme-alpine" style={{ height: '400px', width: '100%', flexGrow: 1, marginTop: 2 }}>

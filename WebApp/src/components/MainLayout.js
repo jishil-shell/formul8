@@ -324,8 +324,15 @@ const MainLayout = () => {
     }
 
     const newTemplate = async () => {
-        console.log('selectedTemplate : ' + selectedTemplate);
         setShowTemplateNamePopup(true)
+    };
+
+    const shareTemplate = async () => {
+        openModal({
+            title: 'Share Template',
+            message: 'We are working on this feature, will be ready soon!',
+            positiveButtonText: 'Ok'
+        });
     };
 
     const updateTemplate = async () => {
@@ -428,15 +435,16 @@ const MainLayout = () => {
                                     <TabsComponent tabs={tabs} preferredTab={activeTab}>
                                         <>
                                             <div className="download-panel">
-                                                <button onClick={newTemplate}>Create New Template</button>
+                                                <button onClick={newTemplate} title="Create new template from the current grid data with a unique name.">Save As New Template</button>
                                                 {
                                                     !selectedTemplate.generic && (
                                                         <>
-                                                            <button onClick={updateTemplate}>Update Template</button>
-                                                            <button onClick={deleteTemplate}>Delete Template</button>
+                                                            <button onClick={updateTemplate} title="Update the selected template with current grid data.">Save Template</button>
+                                                            <button onClick={deleteTemplate} title="Delete the selected template, it cannot be reverted back.">Delete Template</button>
                                                         </>
                                                     )
                                                 }
+                                                <button onClick={shareTemplate} title="Share the selected template with team mates">Share Template</button>
 
                                                 <Toaster position="bottom-center" />
                                             </div>
