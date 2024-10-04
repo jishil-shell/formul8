@@ -62,9 +62,11 @@
   background-color: #282c34;
 }
 
-.popup .checkbox {
+.popup .checkboxList {
   display: 'flex';
   align-items: 'center';
-  margin-bottom: '10px';
+  margin-bottom: '20px';
   text-align: left;
+  padding: '4px 0';
+  margin-top: '20px';
 }

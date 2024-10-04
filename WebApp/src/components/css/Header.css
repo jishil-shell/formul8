@@ -21,3 +21,9 @@
     border-radius: 5px; 
     margin-right: 20px;
 }
+
+.app-header .username {
+    font-size: 22px;
+    float: left;
+    margin-right: 20px;
+}

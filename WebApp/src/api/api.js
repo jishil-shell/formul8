@@ -36,6 +36,17 @@ const api = axios.create({
   );
   
   // API calls  
+
+  export const validateUser = async (data) => {
+    try {
+      const response = await api.post('/validuser', data);
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      return false;
+    }
+  };
+
   export const solverOptimalFormulation = async (data) => {
     try {
       const response = await api.post('/solver', data);
@@ -49,6 +60,26 @@ const api = axios.create({
   export const getTemplates = async (data) => {
     try {
       const response = await api.post('/getsolvertemplates', data);
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      return false;
+    }
+  };
+
+  export const getTemplateMappings = async (data) => {
+    try {
+      const response = await api.get('/gettemplateusermappings', {params : data});
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      return false;
+    }
+  };
+
+  export const updateTemplateMappings = async (data) => {
+    try {
+      const response = await api.post('/savetemplateusermappings', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);

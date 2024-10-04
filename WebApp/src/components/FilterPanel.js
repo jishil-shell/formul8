@@ -72,7 +72,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
             let templateData = await getTemplates(userInfo);
             if (templateData) {
                 let items = [];
-                let activeTemplate = {};                
+                let activeTemplate = {};  
                 templateData.forEach((t) => {
                     let item = {};
                     item.name = t.TemplateName;
@@ -80,8 +80,17 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
                     item.data = JSON.parse(t.TemplateJson);
                     item.default = t.ISDEFULT || false;
                     item.generic = t.isGeneric || false;
+                    item.shared = t.isShared || false;
+                    item.owner = t.CreatedBY || '';
+                    item.ownerName = t.FullName || '';
                     if (t.ISDEFULT) {
                         activeTemplate = item;
+                    }
+                    if(t.isGeneric) {
+                        item.text += ' (Generic)' 
+                    }
+                    if(t.isShared) {
+                        item.text += ' (Shared)' 
                     }
                     items.push(item)
                 })

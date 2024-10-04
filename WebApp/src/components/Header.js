@@ -13,9 +13,13 @@ const Header = () => {
 
             {
                 user && user.username &&
-                <button className="logout-button" onClick={logoutUser}>
-                    Log Out
-                </button>
+                <div>
+                    <p className='username'> Hi, {user.fullname ? user.fullname : user.username}</p>
+                    <button className="logout-button" onClick={logoutUser}>
+                        Log Out
+                    </button>
+                </div>
+
             }
 
         </header>

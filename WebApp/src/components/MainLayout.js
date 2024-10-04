@@ -20,6 +20,7 @@ import TemplateNamePopup from './TemplateNamePopup';
 import { useModal } from '../context/ModalContext';
 import { useUserContext } from '../context/UserContext';
 import { useDataContext } from '../context/DataContext';
+import TemplateSharePopup from './TemplateSharePopup';
 
 
 const MainLayout = () => {
@@ -40,6 +41,7 @@ const MainLayout = () => {
     const [theoreticalPropertyInputs, setTheoreticalPropertyInputs] = useState({});
     const [responseConstraint, setResponseConstraint] = useState({});
     const [showTemplateNamePopup, setShowTemplateNamePopup] = useState(false);
+    const [showTemplateSharePopup, setShowTemplateSharePopup] = useState(false);
 
     const loadData = (jsonData) => {
         setJsonData(jsonData);
@@ -328,63 +330,68 @@ const MainLayout = () => {
     };
 
     const shareTemplate = async () => {
-        openModal({
-            title: 'Share Template',
-            message: 'We are working on this feature, will be ready soon!',
-            positiveButtonText: 'Ok'
-        });
+        setShowTemplateSharePopup(true);
     };
 
     const updateTemplate = async () => {
-        openModal({
-            title: 'Default Template',
-            message: 'Do want to make this template as default template?',
-            positiveButtonText: 'Yes',
-            negativeButtonText: 'No',
-            onAction: async () => {
-                setLoading(true);
-                let requestInfo = {
-                    TemplateName: selectedTemplate.name,
-                    TemplateJson: await formatRequestData(),
-                    ISDEFULT: selectedTemplate.default,
-                    CreatedBY: user?.username || '',
-                    IsActive: true
+        if(selectedTemplate.shared) {
+            toast('Shared template cannot be updated, please coordinate with the template owner '+selectedTemplate?.ownerName, { style: { background: '#000', color: '#fff', minWidth: '400px'} });
+        } else {
+            openModal({
+                title: 'Default Template',
+                message: 'Do want to make this template as default template?',
+                positiveButtonText: 'Yes',
+                negativeButtonText: 'No',
+                onAction: async () => {
+                    setLoading(true);
+                    let requestInfo = {
+                        TemplateName: selectedTemplate.name,
+                        TemplateJson: await formatRequestData(),
+                        ISDEFULT: selectedTemplate.default,
+                        CreatedBY: user?.username || '',
+                        IsActive: true
+                    }
+                    let response = await saveTemplateApi(requestInfo);
+                    setLoading(false);
+                    if (response) {
+                        window.location.reload();
+                    }
                 }
-                let response = await saveTemplateApi(requestInfo);
-                setLoading(false);
-                if (response) {
-                    window.location.reload();
-                }
-            }
-        });
+            });
+        }
+        
     };
 
     const deleteTemplate = async () => {
-        openModal({
-            title: 'Delete Template',
-            message: 'Are you sure you want to delete this template?',
-            positiveButtonText: 'Yes',
-            negativeButtonText: 'No',
-            onAction: async () => {
-                setLoading(true);
-                let requestInfo = {
-                    "Template_Name": selectedTemplate.name,
-                    "appArea": "Formul8"
+        if(selectedTemplate.shared) {
+            toast('Shared template cannot be deleted, please coordinate with the template owner '+selectedTemplate?.ownerName, { style: { background: '#000', color: '#fff' } });
+        } else {
+            openModal({
+                title: 'Delete Template',
+                message: 'Are you sure you want to delete this template?',
+                positiveButtonText: 'Yes',
+                negativeButtonText: 'No',
+                onAction: async () => {
+                    setLoading(true);
+                    let requestInfo = {
+                        "Template_Name": selectedTemplate.name,
+                        "appArea": "Formul8"
+                    }
+                    let response = await deleteTemplateApi(requestInfo);
+                    setLoading(false);
+                    if (response) {
+                        window.location.reload();
+                    }
                 }
-                let response = await deleteTemplateApi(requestInfo);
-                setLoading(false);
-                if (response) {
-                    window.location.reload();
-                }
-            }
-        });
+            });
+        }
     };
 
-    const handleLoginSuccess = (username) => {
-        loginUser({username : username})
+    const handleLoginSuccess = (activeUser) => {
+        loginUser(activeUser)
     };
 
-    const TemplateNamePopupResponse = async (templateName, isDefault) => {
+    const templateNamePopupResponse = async (templateName, isDefault) => {
         setShowTemplateNamePopup(false)
         if (templateName) {
             setLoading(true);
@@ -403,6 +410,10 @@ const MainLayout = () => {
         }
     };
 
+    const templateSharePopupResponse = async (templateName, isDefault) => {
+        setShowTemplateSharePopup(false)
+    }
+
     return (
         <div className="main-layout">
             <Header />
@@ -416,7 +427,11 @@ const MainLayout = () => {
                         <div className="report-panel">
                             <TemplateNamePopup
                                 show={showTemplateNamePopup}
-                                onClose={TemplateNamePopupResponse}
+                                onClose={templateNamePopupResponse}
+                            />
+                            <TemplateSharePopup
+                                show={showTemplateSharePopup}
+                                onClose={templateSharePopupResponse}                                
                             />
                             {/* {loading && <LinearProgress style={{ margin: '20px 0' }} />} */}
                             {(!jsonData || jsonData.length === 0) ? (
