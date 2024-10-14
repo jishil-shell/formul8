@@ -5,6 +5,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../css/Grid.css';
 import { useDataContext } from '../../context/DataContext';
 import { useModal } from '../../context/ModalContext';
+import { toast,Toaster } from 'react-hot-toast';
 
 const IngredientGrid = ({ runType, onGridUpdate }) => {
     const gridRef = useRef();
@@ -98,10 +99,32 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
         const selectedNodes = gridRef.current.api.getSelectedNodes();
         const selectedRowIds = selectedNodes.map(node => node.data.id);
         const updatedData = [...rowData];
-        updatedData[params.node.rowIndex][params.colDef.field] = parseFloat(params.value);
+        const columnName = params.colDef.field;
+        updatedData[params.node.rowIndex][columnName] = parseFloat(params.value);
+        let polyolTotalQuantity = 0;
+        if(runType === 'static' && columnName === 'quantity') {
+            selectedNodes.forEach((item) => {
+                if(item.data.type === 'polyol' && item.data.selected && item.data.quantity > 0) {
+                    polyolTotalQuantity += parseFloat(item.data.quantity)
+                }
+            })
+        }
 
-        if(jsonData.ingredients[params?.data?.ingredient][params?.colDef?.field] !== parseFloat(params.value)) {
-            jsonData.ingredients[params?.data?.ingredient][params?.colDef?.field] = parseFloat(params.value);
+        if(polyolTotalQuantity > 100) {
+            params.node.setDataValue(params.column.colId, params.oldValue);
+            let msg = 'Total quantity of the Polyol should be 100'
+            return toast(msg, {
+                style: {
+                    background: '#333',
+                    color: '#fff',
+                    minWidth: '40%'
+                },
+            });
+        }
+        
+
+        if(jsonData.ingredients[params?.data?.ingredient][columnName] !== parseFloat(params.value)) {
+            jsonData.ingredients[params?.data?.ingredient][columnName] = parseFloat(params.value);
             setJsonData(jsonData);
         }
 
@@ -184,6 +207,7 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
                     getRowNodeId={getRowNodeId}
                 />
             </div>
+            <Toaster position="bottom-center" />
         </>
     );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import FilterPanel from './FilterPanel';
 import ConditionsGrid from './grids/ConditionsGrid';
 import IngredientGrid from './grids/IngredientGrid';
@@ -35,6 +35,7 @@ const MainLayout = () => {
     const [activeTab, setActiveTab] = useState(0);
     const [filterValues, setFilterValues] = useState({});
     const [refreshKey, setRefreshKey] = useState(0);
+    const [reloadTemplates, setReloadTemplates] = useState(true);
     const [isocyanateValues, setIsocyanateValues] = useState({});
     const [conditionsInputs, setConditionsInputs] = useState([]);
     const [ingredientInputs, setIngredientInputs] = useState({});
@@ -53,6 +54,7 @@ const MainLayout = () => {
             max: jsonData?.conditions?.isoindex_bound_high?.value ? parseFloat(jsonData?.conditions?.isoindex_bound_high?.value) : 0,
         };
         setIsocyanateValues(updatedIsocyanateValues)
+        setReloadTemplates(false)
     };
 
     const handleFilterChange = (filterType, filterValue) => {
@@ -108,12 +110,13 @@ const MainLayout = () => {
         setTheoreticalPropertyInputs(data)
     }
 
-    const formatRequestData = async () => {
+    const formatRequestData = async (action) => {
         let requestData = {
             objective_type: filterValues.objective_type || "cost",
             objective_sense: filterValues.objective_sense || "min",
             carbon_footprint_limit: filterValues.pareto_points ? filterValues.pareto_points : null
         };
+        let totalPolyolQuantity = 0;
 
         let updatedInputData = JSON.parse(JSON.stringify(jsonData));
 
@@ -146,6 +149,9 @@ const MainLayout = () => {
                 if (filterValues?.run_type === 'static') {
                     updatedInputData["ingredients"][item.ingredient].quantity = parseFloat(item.quantity);
                 }
+                if(item.type === 'polyol') {
+                    totalPolyolQuantity += parseFloat(item.quantity)
+                }
             } else {
                 updatedInputData["ingredients"][item.ingredient].available = false;
             }
@@ -164,7 +170,9 @@ const MainLayout = () => {
             });
         }
         requestData.input_json = updatedInputData;
-
+        if(action === 'calculate_properties') {
+            requestData.total_polyol_quantity = totalPolyolQuantity;
+        }        
         return requestData;
     }
 
@@ -286,21 +294,31 @@ const MainLayout = () => {
                 }
                 break;
             case 'calculate_properties':
+                
                 try {
                     setLoading(true);
                     const newData = await formatRequestData(option);
-                    const result = await solverOptimalFormulation(newData);
-                    setLoading(false);
-                    if (result && result.expressions) {
-                        setActiveTab(1);
-                        setResultData(result);
-                        toast('Optimum solution found!', { style: { background: '#008000', color: '#fff' } });
-                    } else {
-                        setResultData({});
+                    if(newData.total_polyol_quantity !== 100) {
+                        setLoading(false);
                         openModal({
-                            title: 'Oops!',
-                            message: 'No optimal solution found!'
+                            title: 'Incorrect Quantity!',
+                            message: 'Total Polyol quantity of selected ingredients should be 100'
                         });
+                    } else {
+                        delete newData['total_polyol_quantity'];
+                        const result = await solverOptimalFormulation(newData);
+                        setLoading(false);
+                        if (result && result.expressions) {
+                            setActiveTab(1);
+                            setResultData(result);
+                            toast('Optimum solution found!', { style: { background: '#008000', color: '#fff' } });
+                        } else {
+                            setResultData({});
+                            openModal({
+                                title: 'Oops!',
+                                message: 'No optimal solution found!'
+                            });
+                        }
                     }
                 } catch (error) {
                     console.error('Request failed:', error);
@@ -334,37 +352,37 @@ const MainLayout = () => {
     };
 
     const updateTemplate = async () => {
-        if(selectedTemplate.shared) {
-            toast('Shared template cannot be updated, please coordinate with the template owner '+selectedTemplate?.ownerName, { style: { background: '#000', color: '#fff', minWidth: '400px'} });
+        if (selectedTemplate.shared) {
+            toast('Shared template cannot be updated, please coordinate with the template owner ' + selectedTemplate?.ownerName, { style: { background: '#000', color: '#fff', minWidth: '400px' } });
         } else {
             openModal({
                 title: 'Default Template',
                 message: 'Do want to make this template as default template?',
                 positiveButtonText: 'Yes',
                 negativeButtonText: 'No',
-                onAction: async () => {
+                onAction: async (status) => {
                     setLoading(true);
                     let requestInfo = {
                         TemplateName: selectedTemplate.name,
                         TemplateJson: await formatRequestData(),
-                        ISDEFULT: selectedTemplate.default,
+                        ISDEFULT: status || false,
                         CreatedBY: user?.username || '',
                         IsActive: true
                     }
                     let response = await saveTemplateApi(requestInfo);
                     setLoading(false);
                     if (response) {
-                        window.location.reload();
+                        setReloadTemplates(true);
                     }
                 }
             });
         }
-        
+
     };
 
     const deleteTemplate = async () => {
-        if(selectedTemplate.shared) {
-            toast('Shared template cannot be deleted, please coordinate with the template owner '+selectedTemplate?.ownerName, { style: { background: '#000', color: '#fff' } });
+        if (selectedTemplate.shared) {
+            toast('Shared template cannot be deleted, please coordinate with the template owner ' + selectedTemplate?.ownerName, { style: { background: '#000', color: '#fff' } });
         } else {
             openModal({
                 title: 'Delete Template',
@@ -380,7 +398,7 @@ const MainLayout = () => {
                     let response = await deleteTemplateApi(requestInfo);
                     setLoading(false);
                     if (response) {
-                        window.location.reload();
+                        setReloadTemplates(true);
                     }
                 }
             });
@@ -405,7 +423,7 @@ const MainLayout = () => {
             let response = await saveTemplateApi(requestInfo);
             setLoading(false);
             if (response) {
-                window.location.reload();
+                setReloadTemplates(true);
             }
         }
     };
@@ -413,6 +431,10 @@ const MainLayout = () => {
     const templateSharePopupResponse = async (templateName, isDefault) => {
         setShowTemplateSharePopup(false)
     }
+
+    const handleTabChange = (event, newValue) => {
+        setActiveTab(newValue);
+    };
 
     return (
         <div className="main-layout">
@@ -422,7 +444,7 @@ const MainLayout = () => {
                     <div className="content">
                         <div className="left-panel">
                             {/* <FileUploader onFileUpload={handleFileUpload} /> */}
-                            <FilterPanel onDataLoad={loadData} onFilterChange={handleFilterChange} onAction={onAction} reload={refreshKey} />
+                            <FilterPanel onDataLoad={loadData} onFilterChange={handleFilterChange} onAction={onAction} reload={reloadTemplates} />
                         </div>
                         <div className="report-panel">
                             <TemplateNamePopup
@@ -431,7 +453,7 @@ const MainLayout = () => {
                             />
                             <TemplateSharePopup
                                 show={showTemplateSharePopup}
-                                onClose={templateSharePopupResponse}                                
+                                onClose={templateSharePopupResponse}
                             />
                             {/* {loading && <LinearProgress style={{ margin: '20px 0' }} />} */}
                             {(!jsonData || jsonData.length === 0) ? (
@@ -447,7 +469,7 @@ const MainLayout = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <TabsComponent tabs={tabs} preferredTab={activeTab}>
+                                    <TabsComponent tabs={tabs} preferredTab={activeTab} onTabChange={handleTabChange}>
                                         <>
                                             <div className="download-panel">
                                                 <button onClick={newTemplate} title="Create new template from the current grid data with a unique name.">Save As New Template</button>

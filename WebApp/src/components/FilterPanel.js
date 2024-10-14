@@ -62,55 +62,59 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
         { value: 'variable', text: 'Variable' }
     ];
 
-    useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
-            let userInfo = {
-                "userName": user?.username || '',
-                "appArea": "Formul8"
-            }
-            let templateData = await getTemplates(userInfo);
-            if (templateData) {
-                let items = [];
-                let activeTemplate = {};  
-                templateData.forEach((t) => {
-                    let item = {};
-                    item.name = t.TemplateName;
-                    item.text = t.TemplateName;
-                    item.data = JSON.parse(t.TemplateJson);
-                    item.default = t.ISDEFULT || false;
-                    item.generic = t.isGeneric || false;
-                    item.shared = t.isShared || false;
-                    item.owner = t.CreatedBY || '';
-                    item.ownerName = t.FullName || '';
-                    if (t.ISDEFULT) {
-                        activeTemplate = item;
-                    }
-                    if(t.isGeneric) {
-                        item.text += ' (Generic)' 
-                    }
-                    if(t.isShared) {
-                        item.text += ' (Shared)' 
-                    }
-                    items.push(item)
-                })
-                setTemplates(items)
-                if (activeTemplate && activeTemplate.name) {
-                    setSelectedTemplate(activeTemplate);
-                    onDataLoad(activeTemplate?.data?.input_json || {})
-                } else {
-                    activeTemplate = items[0];
-                    setSelectedTemplate(activeTemplate);
-                    onDataLoad(activeTemplate?.data?.input_json || {})
-                }
-                setLoading(false);
-            } else {
-                setLoading(false);
-                toast('Request failed!', { style: { background: '#333', color: '#fff' } });
-            }
+    async function fetchData() {
+        setLoading(true);
+        let userInfo = {
+            "userName": user?.username || '',
+            "appArea": "Formul8"
         }
-        fetchData();
-    }, []);
+        let templateData = await getTemplates(userInfo);
+        if (templateData) {
+            let items = [];
+            let activeTemplate = {};  
+            templateData.forEach((t) => {
+                let item = {};
+                item.name = t.TemplateName;
+                item.text = t.TemplateName;
+                item.data = JSON.parse(t.TemplateJson);
+                item.default = t.ISDEFULT || false;
+                item.generic = t.isGeneric || false;
+                item.shared = t.isShared || false;
+                item.owner = t.CreatedBY || '';
+                item.ownerName = t.FullName || '';
+                if (t.ISDEFULT) {
+                    activeTemplate = item;
+                }
+                if(t.isGeneric) {
+                    item.text += ' (Generic)' 
+                }
+                if(t.isShared) {
+                    item.text += ' (Shared)' 
+                }
+                items.push(item)
+            })
+            setTemplates(items)
+            if (activeTemplate && activeTemplate.name) {
+                setSelectedTemplate(activeTemplate);
+                onDataLoad(activeTemplate?.data?.input_json || {})
+            } else {
+                activeTemplate = items[0];
+                setSelectedTemplate(activeTemplate);
+                onDataLoad(activeTemplate?.data?.input_json || {})
+            }
+            setLoading(false);
+        } else {
+            setLoading(false);
+            toast('Request failed!', { style: { background: '#333', color: '#fff' } });
+        }
+    }
+
+    useEffect(() => {
+        if(reload) {
+            fetchData();
+        }
+        
+    }, [reload]);
 
     useEffect(() => {
         if(selectedTemplate && selectedTemplate.name) {
@@ -139,8 +143,12 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
                 var activeTemplate = templates.find(item => item.name === e.target.value);
                 if (activeTemplate && activeTemplate.data) {
                     setSelectedTemplate(activeTemplate);
-                    onDataLoad(activeTemplate.data?.input_json || {});
-                    setResultData({});
+                    setLoading(true);
+                    setTimeout(() => {
+                        onDataLoad(activeTemplate.data?.input_json || {});  
+                        setLoading(false);
+                    }, 5)
+                                      
                 }
                 break;
             case 'run_type':
@@ -164,6 +172,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
             default:
                 break;
         }
+        setResultData({});
         onFilterChange(filterType, e.target.value);
     };
 

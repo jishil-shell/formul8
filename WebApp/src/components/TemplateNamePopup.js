@@ -48,7 +48,7 @@ const TemplateNamePopup = ({ show, onClose }) => {
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
           />
-          <div className="checkbox">
+          <div style={{textAlign:'left', fontSize:18}}>
             <input
               type="checkbox"
               checked={isDefault}

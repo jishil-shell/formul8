@@ -17,13 +17,16 @@ export const ModalProvider = ({ children }) => {
 
     const closeModal = () => {
         setIsOpen(false);
-        setModalContent({});
+        if (modalContent.onAction) {
+            modalContent.onAction(false);
+            setModalContent({});
+        }
     };
 
     const actionModal = () => {
         setIsOpen(false);
         if (modalContent.onAction) {
-            modalContent.onAction();
+            modalContent.onAction(true);
             setModalContent({});
         }
     };
