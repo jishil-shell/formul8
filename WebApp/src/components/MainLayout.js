@@ -455,7 +455,7 @@ const MainLayout = () => {
                                 show={showTemplateSharePopup}
                                 onClose={templateSharePopupResponse}
                             />
-                            {/* {loading && <LinearProgress style={{ margin: '20px 0' }} />} */}
+                            <SeparatorLine />
                             {(!jsonData || jsonData.length === 0) ? (
                                 <div style={{
                                     display: 'flex',

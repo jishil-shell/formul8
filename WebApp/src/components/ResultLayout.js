@@ -5,6 +5,9 @@ import KeyValueLayout from './KeyValueLayout';
 import SeparatorLine from './SeparatorLine';
 import CollapsibleGrid from './grids/CollapsibleGrid';
 import ChartPanel from './ChartPanel';
+import HorizontalBarChart from './HorizontalBarChart';
+import CustomBarChart from './CustomBarChart';
+
 
 const ResultLayout = ({ filterValues, inputData, resultData }) => {
 
@@ -211,8 +214,9 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                     <>
                         <h3 style={{ textAlign: 'left' }}>Foam Properties</h3>
 
-                        {/* <BarChart plot={responseResultsPlot}/> */}
-                        {/* <HorizontalBarChart plot={responseResultsPlot}/> */}
+                         {/* <CustomBarChart plot={responseResultsPlot}/> */}
+
+                        <HorizontalBarChart data = {responseResultsPlot}/>
 
                         <CollapsibleGrid title={'Tabular View of Response Results'} columnDefs={responseResultsColumnDefs} rowData={responseResults} gridOpen={true} />
                     </>
@@ -227,8 +231,6 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                             <CollapsibleGrid title={'Theoretical Polyol Property Results'} columnDefs={theoreticalPropertiesResultsColumnDefs} rowData={theoreticalPropertiesResults} gridOpen={true} />
                         </>
                     }
-
-                    <SeparatorLine />
                 </>
             )
         ) : (
