@@ -112,8 +112,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
     useEffect(() => {
         if(reload) {
             fetchData();
-        }
-        
+        }        
     }, [reload]);
 
     useEffect(() => {

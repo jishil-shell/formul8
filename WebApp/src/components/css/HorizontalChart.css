@@ -39,10 +39,10 @@
   position: relative; /* Positioning for the dot */
 }
 
-.filled-bar1 {
+.filled-bar {
   background-color: rgba(75, 192, 192, 0.6); /* Filled color */
   height: 100%; /* Fill height */
-  position: absolute; /* Positioning for width and left */
+  /* position: absolute; */
   top: 0; /* Align to the top */
 }
 

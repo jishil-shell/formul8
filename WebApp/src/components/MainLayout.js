@@ -455,7 +455,7 @@ const MainLayout = () => {
                                 show={showTemplateSharePopup}
                                 onClose={templateSharePopupResponse}
                             />
-                            <SeparatorLine />
+                            {/* <SeparatorLine /> */}
                             {(!jsonData || jsonData.length === 0) ? (
                                 <div style={{
                                     display: 'flex',
@@ -517,7 +517,7 @@ const MainLayout = () => {
 
                                                 </>
 
-                                                <IngredientGrid runType={filterValues?.run_type} onGridUpdate={handleIngredientInputsChange} />
+                                                <IngredientGrid runType={filterValues?.run_type} foamType={filterValues?.foam_type} onGridUpdate={handleIngredientInputsChange} />
 
                                                 <SeparatorLine />
 

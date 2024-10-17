@@ -6,7 +6,6 @@ import SeparatorLine from './SeparatorLine';
 import CollapsibleGrid from './grids/CollapsibleGrid';
 import ChartPanel from './ChartPanel';
 import HorizontalBarChart from './HorizontalBarChart';
-import CustomBarChart from './CustomBarChart';
 
 
 const ResultLayout = ({ filterValues, inputData, resultData }) => {
@@ -214,9 +213,12 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
                     <>
                         <h3 style={{ textAlign: 'left' }}>Foam Properties</h3>
 
-                         {/* <CustomBarChart plot={responseResultsPlot}/> */}
+                        {
+                            filterValues?.run_type === 'optimization' &&
+                            <div style={{ textAlign: 'left', fontSize : 20, marginBottom : 25 }}>Note : The shaded area represent the user set bounds for the constraint</div>
+                        }
 
-                        <HorizontalBarChart data = {responseResultsPlot}/>
+                        <HorizontalBarChart runType = {filterValues.run_type} data = {responseResultsPlot}/>
 
                         <CollapsibleGrid title={'Tabular View of Response Results'} columnDefs={responseResultsColumnDefs} rowData={responseResults} gridOpen={true} />
                     </>

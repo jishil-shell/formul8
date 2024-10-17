@@ -7,7 +7,7 @@ import { useDataContext } from '../../context/DataContext';
 import { useModal } from '../../context/ModalContext';
 import { toast,Toaster } from 'react-hot-toast';
 
-const IngredientGrid = ({ runType, onGridUpdate }) => {
+const IngredientGrid = ({ runType, foamType, onGridUpdate }) => {
     const gridRef = useRef();
     const { openModal } = useModal();
     let [rowData, setRowData] = useState([]);
@@ -32,7 +32,8 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
                 carbon_footprint: ingredientsData[i].carbon_footprint,
                 selected: ingredientsData[i].available
             })
-            if (ingredientsData[i].available) {
+            let foamKey = "applicable_"+foamType;
+            if (ingredientsData[i].available && ingredientsData[i][foamKey]) {
                 selectedRowIds.push(id)
             }
             refData.push({name : i, ...ingredientsData[i]})
@@ -46,7 +47,7 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
                 });
             }
         }, 0);
-    }, [jsonData]);
+    }, [jsonData, runType, foamType]);
 
 
     // Get row ID (useful for handling selection state)
@@ -60,6 +61,9 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
                 field: 'select',
                 headerName: '',
                 width: 50,
+                maxWidth : 60,
+                floatingFilter: false,
+                filter : false,
                 headerCheckboxSelectionFilteredOnly: true,
                 cellStyle: { textAlign: 'center', backgroundColor: '#FFF'}                
             },
@@ -199,7 +203,7 @@ const IngredientGrid = ({ runType, onGridUpdate }) => {
                     suppressRowDeselection={true}
                     rowSelection="multiple"
                     onGridSizeChanged={(params) => params.api.sizeColumnsToFit()}
-                    defaultColDef={{ filter: true, sortable: true }}
+                    defaultColDef={{ filter: true, floatingFilter: true, sortable: true }}
                     onCellValueChanged={onCellValueChanged}
                     onGridReady={onGridReady}
                     onSelectionChanged={onSelectionChanged}

@@ -171,7 +171,7 @@ const TheoreticalPropertyGrid = ({ onGridUpdate, foamType }) => {
                     suppressRowClickSelection={true}
                     rowSelection="single"
                     onGridSizeChanged={(params) => params.api.sizeColumnsToFit()}
-                    defaultColDef={{ filter: true, sortable: true, minWidth: 100 }}
+                    defaultColDef={{ filter: true, floatingFilter: true, sortable: true, minWidth: 100 }}
                     onCellValueChanged={onCellValueChanged}
                     onGridReady={onGridReady}
                 />

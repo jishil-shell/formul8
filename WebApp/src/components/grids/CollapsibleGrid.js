@@ -34,7 +34,7 @@ const CollapsibleGrid = ({ title, columnDefs, rowData, gridOpen }) => {
                         suppressRowClickSelection={true}
                         rowSelection="single"
                         onGridSizeChanged={(params) => params.api.sizeColumnsToFit()}
-                        defaultColDef={{ filter: true, sortable: true }}
+                        defaultColDef={{ filter: true, floatingFilter: true, sortable: true }}
                     />
                 </div>
             )}

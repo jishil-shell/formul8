@@ -82,6 +82,9 @@ const ResponseConstraintGrid = ({ foamType, onGridUpdate }) => {
                 field: 'select',
                 headerName: '',
                 width: 50,
+                maxWidth : 60,
+                floatingFilter: false,
+                filter : false,
                 headerCheckboxSelectionFilteredOnly: true,
                 cellStyle: { textAlign: 'center', backgroundColor: '#FFF' }
             },
@@ -218,7 +221,7 @@ const ResponseConstraintGrid = ({ foamType, onGridUpdate }) => {
                     suppressRowDeselection={true}
                     rowSelection="multiple"
                     onGridSizeChanged={(params) => params.api.sizeColumnsToFit()}
-                    defaultColDef={{ filter: true, sortable: true }}
+                    defaultColDef={{ filter: true, floatingFilter: true, sortable: true }}
                     onCellValueChanged={onCellValueChanged}
                     onGridReady={onGridReady}
                     onSelectionChanged={onSelectionChanged}

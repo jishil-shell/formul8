@@ -90,7 +90,7 @@ const ConditionsGrid = ({ onGridUpdate }) => {
                     suppressRowClickSelection={true}
                     rowSelection="single"
                     onGridSizeChanged={(params) => params.api.sizeColumnsToFit()}
-                    defaultColDef={{ filter: true, sortable: true }}
+                    defaultColDef={{ filter: true, floatingFilter: true, sortable: true }}
                     onCellValueChanged={onCellValueChanged}
                     onGridReady={onGridReady}
                 />
