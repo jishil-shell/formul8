@@ -35,13 +35,13 @@ const HorizontalChart = ({ data, runType }) => {
     const barRect = barRef.current.getBoundingClientRect();
     const xPos = e.clientX - barRect.left;
     const barWidth = barRect.width;
-    
+
     // Calculate the value based on the mouse position within the bar
     const percent = (xPos / barWidth) * 100;
     const currentValue = ((item.high_absolute - item.low_absolute) * percent / 100) + item.low_absolute;
-    
+
     const hoverTooltipPosition = {
-      top: e.clientY - 10, // Position slightly above the mouse pointer
+      top: e.clientY - 10 , // Position slightly above the mouse pointer
       left: e.clientX - 550, // Slightly to the right of the mouse pointer
     };
 
@@ -73,6 +73,14 @@ const HorizontalChart = ({ data, runType }) => {
         // Calculate the dot position based on the result value
         const resultPercent = ((parseFloat(item.result) - item.low_absolute) / (item.high_absolute - item.low_absolute)) * 100;
         const dotPosition = resultPercent < 0 ? 0 : resultPercent; // Ensure the dot doesn't go negative
+
+        // Define the number of segments
+        const segments = 5; // You can change this value to show more or fewer marks
+        const segmentValues = [];
+        for (let i = 0; i <= segments; i++) {
+          const value = item.low_absolute + (i * (item.high_absolute - item.low_absolute) / segments);
+          segmentValues.push(value.toFixed(2));
+        }
 
         return (
           <div
@@ -111,6 +119,23 @@ const HorizontalChart = ({ data, runType }) => {
                   {/* Only display the result value in the dot */}
                 </span>
               </div>
+              <div className="segment-values">
+              {segmentValues.map((value, idx) => (
+                <span
+                  key={idx}
+                  style={{
+                    position: 'absolute',
+                    left: `${(idx / segments) * 100}%`,
+                    top: '36px', // Position below the bar
+                    transform: 'translateX(-50%)',
+                    fontSize: '9px',
+                    color:'grey'
+                  }}
+                >
+                  {value}
+                </span>
+              ))}
+            </div>
             </div>
             <div className="value high">{item.high_absolute}</div>
           </div>
