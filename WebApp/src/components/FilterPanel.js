@@ -129,9 +129,33 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
             onFilterChange('objective_sense', 'min');
         }
 
+        if (jsonData?.conditions?.optimization_run?.value) {
+            setSelectedRunType('optimization');
+            onFilterChange('run_type', 'optimization');
+        } else {
+            setSelectedRunType('static');
+            onFilterChange('run_type', 'static');
+        }
+
         if (jsonData?.conditions?.FOAM_TYPE?.value) {
             setSelectedFoamType(jsonData.conditions.FOAM_TYPE.value);
             onFilterChange('foam_type', jsonData.conditions.FOAM_TYPE.value);
+        }
+
+        if (jsonData?.conditions?.single_polyol_per_type?.value) {
+            setSelectedPolyolType('single');
+            onFilterChange('polyol_type', 'single');
+        } else {
+            setSelectedPolyolType('multiple');
+            
+            onFilterChange('polyol_type', 'multiple');
+        }
+        if (jsonData?.conditions?.variable_theoretical_properties?.value) {
+            setSelectedTheoreticalProperty('variable');
+            onFilterChange('theoretical_property', 'variable');
+        } else {
+            setSelectedTheoreticalProperty('fixed');
+            onFilterChange('theoretical_property', 'fixed');
         }
 
     }, [jsonData]);
@@ -147,7 +171,6 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
                         onDataLoad(activeTemplate.data?.input_json || {});  
                         setLoading(false);
                     }, 5)
-                                      
                 }
                 break;
             case 'run_type':
@@ -186,7 +209,6 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
     };
 
     const handleButtonClick = (event, action) => {
-
         if (!jsonData || jsonData.length === 0) {
             alert("Please select the JSON file!")
         } else {
@@ -198,6 +220,13 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
         }
     };
 
+    const handleFileUpload = (data) => {
+        setLoading(true);
+        setTimeout(() => {
+            onDataLoad(data);  
+            setLoading(false);
+        }, 5) 
+    };
 
     return (
         <div>
@@ -219,7 +248,7 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
                 showFileUpload &&
                 <div style={{marginBottom:'70px'}}>
                     <span><b>OR</b></span>
-                    <FileUploader onFileUpload={onDataLoad}/>
+                    <FileUploader onFileUpload={handleFileUpload}/>
                 </div>
             }
 

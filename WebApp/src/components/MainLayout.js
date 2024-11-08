@@ -133,8 +133,8 @@ const MainLayout = () => {
 
         if (filterValues.run_type === "optimization") {
             updatedInputData["conditions"]['optimization_run'].value = true;
-            updatedInputData["conditions"]['single_polyol_per_type'].value = filterValues.polyolType === "single" ? true : false;
-            updatedInputData["conditions"]['variable_theoretical_properties'].value = filterValues.theoreticalProperty === "variable" ? true : false;
+            updatedInputData["conditions"]['single_polyol_per_type'].value = filterValues.polyol_type === "single" ? true : false;
+            updatedInputData["conditions"]['variable_theoretical_properties'].value = filterValues.theoretical_property === "variable" ? true : false;
         } else {
             updatedInputData["conditions"]['optimization_run'].value = false;
             requestData.objective_type = "cost";
@@ -149,7 +149,7 @@ const MainLayout = () => {
                 if (filterValues?.run_type === 'static') {
                     updatedInputData["ingredients"][item.ingredient].quantity = parseFloat(item.quantity);
                 }
-                if(item.type === 'polyol') {
+                if(item.type === 'polyol' && item.quantity > 0) {
                     totalPolyolQuantity += parseFloat(item.quantity)
                 }
             } else {
@@ -158,7 +158,7 @@ const MainLayout = () => {
 
         });
 
-        if (filterValues.theoreticalProperty === "fixed") {
+        if (filterValues.theoretical_property === "fixed") {
             theoreticalPropertyInputs.forEach((item) => {
                 if (updatedInputData["ingredients"][item.ingredient]) {
                     for (let i in item) {
@@ -351,6 +351,19 @@ const MainLayout = () => {
         setShowTemplateSharePopup(true);
     };
 
+    const exportTemplate = async () => {
+        const fileName = selectedTemplate.name+".json";
+        const json = JSON.stringify(jsonData, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const href = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const updateTemplate = async () => {
         if (selectedTemplate.shared) {
             toast('Shared template cannot be updated, please coordinate with the template owner ' + selectedTemplate?.ownerName, { style: { background: '#000', color: '#fff', minWidth: '400px' } });
@@ -443,7 +456,6 @@ const MainLayout = () => {
                 (
                     <div className="content">
                         <div className="left-panel">
-                            {/* <FileUploader onFileUpload={handleFileUpload} /> */}
                             <FilterPanel onDataLoad={loadData} onFilterChange={handleFilterChange} onAction={onAction} reload={reloadTemplates} />
                         </div>
                         <div className="report-panel">
@@ -482,6 +494,8 @@ const MainLayout = () => {
                                                     )
                                                 }
                                                 <button onClick={shareTemplate} title="Share the selected template with team mates">Share Template</button>
+
+                                                <button onClick={exportTemplate} title="Export the selected template in the JSON format">Export Template As JSON</button>
 
                                                 <Toaster position="bottom-center" />
                                             </div>
