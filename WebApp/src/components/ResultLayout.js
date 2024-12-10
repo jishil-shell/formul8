@@ -153,7 +153,7 @@ const ResultLayout = ({ filterValues, inputData, resultData }) => {
         setResponseResults(responseResultsList);
         setResponseResultsPlot(responseResultsPlotData);
 
-    }, [inputData, resultData]);
+    }, [inputData, resultData, filterValues]);
 
     return (
         (resultData && (resultData.expressions || resultData.data)) ? (

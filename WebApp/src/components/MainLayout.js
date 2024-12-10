@@ -34,7 +34,6 @@ const MainLayout = () => {
     const tabs = ['Inputs', 'Results'];
     const [activeTab, setActiveTab] = useState(0);
     const [filterValues, setFilterValues] = useState({});
-    const [refreshKey, setRefreshKey] = useState(0);
     const [reloadTemplates, setReloadTemplates] = useState(true);
     const [isocyanateValues, setIsocyanateValues] = useState({});
     const [conditionsInputs, setConditionsInputs] = useState([]);
@@ -61,10 +60,6 @@ const MainLayout = () => {
         let updatedFilterValues = filterValues;
         updatedFilterValues[filterType] = filterValue;
         setFilterValues(updatedFilterValues);
-
-        if (filterType === "run_type" || filterType === "theoretical_property" || filterType === "foam_type") {
-            setRefreshKey(prevKey => prevKey + 1);
-        }
     };
 
     const handleIsocyanatePriceChange = (event) => {
