@@ -8,11 +8,12 @@ export const UserProvider = ({ children }) => {
 
   // On initial load or refresh, check if user data exists in localStorage
   useEffect(() => {
-    let storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      storedUser = JSON.parse(storedUser);
-      if(storedUser.username) {
-        setUser(storedUser);
+    let userInfo = localStorage.getItem('user');
+    userInfo = userInfo ? JSON.parse(userInfo) : {};
+    if (userInfo) {
+     // storedUser = JSON.parse(storedUser);
+      if(userInfo.username) {
+        setUser(userInfo);
       } else {
         logoutUser();
       }
@@ -22,7 +23,7 @@ export const UserProvider = ({ children }) => {
   // Login function to set user info in both state and localStorage
   const loginUser = (userInfo) => {
     setUser(userInfo);
-    localStorage.setItem('user', JSON.stringify(userInfo)); // Store in localStorage
+    localStorage.setItem('user', JSON.stringify(userInfo));
   };
 
   // Logout function to clear both state and localStorage

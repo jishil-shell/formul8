@@ -9,13 +9,12 @@ import SeparatorLine from './SeparatorLine';
 import TextInput from './TextInput';
 import './css/MainLayout.css';
 import { Typography } from '@mui/material';
-import { solverOptimalFormulation } from '../api/api';
+import { solverOptimalFormulation, saveTemplateApi, deleteTemplateApi } from '../api/api';
 import ResultLayout from './ResultLayout';
 import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
 import ResponseConstraintGrid from './grids/ResponseConstraintGrid';
 import LoginPopup from './LoginPopup';
-import { saveTemplateApi, deleteTemplateApi } from '../api/api';
 import TemplateNamePopup from './TemplateNamePopup';
 import { useModal } from '../context/ModalContext';
 import { useUserContext } from '../context/UserContext';
@@ -107,9 +106,9 @@ const MainLayout = () => {
 
     const formatRequestData = async (action) => {
         let requestData = {
-            objective_type: filterValues.objective_type || "cost",
-            objective_sense: filterValues.objective_sense || "min",
-            carbon_footprint_limit: filterValues.pareto_points ? filterValues.pareto_points : null
+            objectiveType: filterValues.objectiveType || "cost",
+            objectiveSense: filterValues.objectiveSense || "min",
+            carbonFootprintLimit: filterValues.pareto_points ? filterValues.pareto_points : null
         };
         let totalPolyolQuantity = 0;
 
@@ -132,8 +131,8 @@ const MainLayout = () => {
             updatedInputData["conditions"]['variable_theoretical_properties'].value = filterValues.theoretical_property === "variable" ? true : false;
         } else {
             updatedInputData["conditions"]['optimization_run'].value = false;
-            requestData.objective_type = "cost";
-            requestData.objective_sense = "min";
+            requestData.objectiveType = "cost";
+            requestData.objectiveSense = "min";
         }
 
         ingredientInputs.forEach((item) => {
@@ -164,7 +163,7 @@ const MainLayout = () => {
                 }
             });
         }
-        requestData.input_json = updatedInputData;
+        requestData.inputJson = updatedInputData;
         if(action === 'calculate_properties') {
             requestData.total_polyol_quantity = totalPolyolQuantity;
         }        
@@ -189,21 +188,21 @@ const MainLayout = () => {
 
         try {
             const minCarbonParams = await formatRequestData();
-            minCarbonParams.objective_type = "carbon";
-            minCarbonParams.objective_sense = "min";
-            minCarbonParams.carbon_footprint_limit = null;
+            minCarbonParams.objectiveType = "carbon";
+            minCarbonParams.objectiveSense = "min";
+            minCarbonParams.carbonFootprintLimit = null;
             let minCarbonFootprintResults = await solverOptimalFormulation(minCarbonParams);
             let minCarbonFootprintValue = minCarbonFootprintResults?.expressions?.carbon_footprint_exp?.value;
 
             const minCostParams = await formatRequestData();
-            minCostParams.objective_type = "cost";
-            minCostParams.objective_sense = "min";
-            minCostParams.carbon_footprint_limit = null;
+            minCostParams.objectiveType = "cost";
+            minCostParams.objectiveSense = "min";
+            minCostParams.carbonFootprintLimit = null;
             let minCostResults = await solverOptimalFormulation(minCostParams);
             let minCostValue = minCostResults?.expressions?.carbon_footprint_exp?.value;
 
             let ingredientNames = minCarbonFootprintResults?.inputs?.ingredients ? Object.keys(minCarbonFootprintResults?.inputs?.ingredients) : [];
-            let columnNames = ["cost", "carbon_footprint", "carbon_footprint_limit", "isocyanate_index"];
+            let columnNames = ["cost", "carbon_footprint", "carbonFootprintLimit", "isocyanate_index"];
 
             let quantityResults = {};
 
@@ -220,9 +219,9 @@ const MainLayout = () => {
                     carbonFootprintLimit = minCarbonFootprintValue + i * (minCostValue - minCarbonFootprintValue
                     ) / (filterValues.pareto_points - 1);
                     const minCostParams = await formatRequestData();
-                    minCostParams.objective_type = "cost";
-                    minCostParams.objective_sense = "min";
-                    minCostParams.carbon_footprint_limit = carbonFootprintLimit;
+                    minCostParams.objectiveType = "cost";
+                    minCostParams.objectiveSense = "min";
+                    minCostParams.carbonFootprintLimit = carbonFootprintLimit;
                     results = await solverOptimalFormulation(minCostParams);
                 }
 
@@ -230,7 +229,7 @@ const MainLayout = () => {
                     row = {
                         "cost": results?.expressions?.cost_exp?.value.toFixed(0),
                         "carbon_footprint": results?.expressions?.carbon_footprint_exp?.value.toFixed(0),
-                        "carbon_footprint_limit": carbonFootprintLimit.toFixed(0),
+                        "carbonFootprintLimit": carbonFootprintLimit.toFixed(0),
                         "isocyanate_index": results?.variables?.isocyanate_index?.value.toFixed(2)
                     }
 
@@ -371,11 +370,11 @@ const MainLayout = () => {
                 onAction: async (status) => {
                     setLoading(true);
                     let requestInfo = {
-                        TemplateName: selectedTemplate.name,
-                        TemplateJson: await formatRequestData(),
-                        ISDEFULT: status || false,
-                        CreatedBY: user?.username || '',
-                        IsActive: true
+                        templateName: selectedTemplate.name,
+                        templateDetails: await formatRequestData(),
+                        isDefault: status || false,
+                        isNew: false,
+                        isActive: true
                     }
                     let response = await saveTemplateApi(requestInfo);
                     setLoading(false);
@@ -397,16 +396,17 @@ const MainLayout = () => {
                 message: 'Are you sure you want to delete this template?',
                 positiveButtonText: 'Yes',
                 negativeButtonText: 'No',
-                onAction: async () => {
-                    setLoading(true);
-                    let requestInfo = {
-                        "Template_Name": selectedTemplate.name,
-                        "appArea": "Formul8"
-                    }
-                    let response = await deleteTemplateApi(requestInfo);
-                    setLoading(false);
-                    if (response) {
-                        setReloadTemplates(true);
+                onAction: async (status) => {
+                    if(status) {
+                        setLoading(true);
+                        let requestInfo = {
+                            "templateName": selectedTemplate.name
+                        }
+                        let apiResponse = await deleteTemplateApi(requestInfo);
+                        setLoading(false);
+                        if (apiResponse?.status) {
+                            setReloadTemplates(true);
+                        }
                     }
                 }
             });
@@ -422,15 +422,15 @@ const MainLayout = () => {
         if (templateName) {
             setLoading(true);
             let requestInfo = {
-                TemplateName: templateName,
-                TemplateJson: await formatRequestData(),
-                ISDEFULT: isDefault,
-                CreatedBY: user?.username || '',
-                IsActive: true
+                templateName: templateName,
+                templateDetails: await formatRequestData(),
+                isDefault: isDefault,
+                isNew: true,
+                isActive: true
             }
-            let response = await saveTemplateApi(requestInfo);
+            let apiResponse = await saveTemplateApi(requestInfo);
             setLoading(false);
-            if (response) {
+            if (apiResponse?.status) {
                 setReloadTemplates(true);
             }
         }

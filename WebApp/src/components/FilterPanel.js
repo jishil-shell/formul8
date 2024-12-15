@@ -64,43 +64,43 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
 
     async function fetchData() {
         setLoading(true);
-        let userInfo = {
-            "userName": user?.username || '',
-            "appArea": "Formul8"
-        }
-        let templateData = await getTemplates(userInfo);
-        if (templateData) {
+        let apiResponse = await getTemplates({});
+        if (apiResponse?.status) {
+            let templateList = apiResponse.response;
             let items = [];
             let activeTemplate = {};  
-            templateData.forEach((t) => {
+            templateList.forEach((t) => {
                 let item = {};
-                item.name = t.TemplateName;
-                item.text = t.TemplateName;
-                item.data = JSON.parse(t.TemplateJson);
-                item.default = t.ISDEFULT || false;
-                item.generic = t.isGeneric || false;
-                item.shared = t.isShared || false;
-                item.owner = t.CreatedBY || '';
-                item.ownerName = t.FullName || '';
-                if (t.ISDEFULT) {
+                item.name = t.templateName;
+                item.text = t.templateName;
+                item.data = JSON.parse(t.templateDetails);
+                if(item.data?.input_json) {
+                    item.data.inputJson = item.data?.input_json;
+                }
+                item.default = t.isDefault ? JSON.parse(t.isDefault) : false;
+                item.generic = t.isGeneric ? JSON.parse(t.isGeneric) : false;
+                item.shared = t.isShared ? JSON.parse(t.isShared) : false;
+                item.owner = t.createdBy || '';
+                item.ownerName = t.fullName || '';
+                if (item.default) {
                     activeTemplate = item;
                 }
-                if(t.isGeneric) {
+                if(item.generic) {
                     item.text += ' (Generic)' 
                 }
-                if(t.isShared) {
+                if(item.shared) {
                     item.text += ' (Shared)' 
                 }
                 items.push(item)
             })
             setTemplates(items)
-            if (activeTemplate && activeTemplate.name) {
+            if (activeTemplate?.name) {
                 setSelectedTemplate(activeTemplate);
-                onDataLoad(activeTemplate?.data?.input_json || {})
+                onDataLoad(activeTemplate?.data?.inputJson || {})
             } else {
                 activeTemplate = items[0];
                 setSelectedTemplate(activeTemplate);
-                onDataLoad(activeTemplate?.data?.input_json || {})
+                onDataLoad(activeTemplate?.data?.inputJson || {})
             }
             setLoading(false);
         } else {
@@ -168,7 +168,8 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
                     setSelectedTemplate(activeTemplate);
                     setLoading(true);
                     setTimeout(() => {
-                        onDataLoad(activeTemplate.data?.input_json || {});  
+                        let data = activeTemplate.data?.inputJson ? activeTemplate.data?.inputJson : {};
+                        onDataLoad(data);  
                         setLoading(false);
                     }, 5)
                 }

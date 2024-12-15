@@ -2,21 +2,22 @@ import axios from 'axios';
 
 // Create an instance of axios
 const api = axios.create({
-    baseURL: 'http://172.206.209.198:8000/', // Replace with your API base URL
+    //baseURL: 'http://172.206.209.198:8000/',
+    baseURL: 'http://20.82.143.0:8000/',
     timeout: 300000, // Request timeout
     headers: {
       'Content-Type': 'application/json',
-      // Add other default headers here if needed
     },
   });
   
   // Request interceptor
   api.interceptors.request.use(
     config => {
-      // Modify config before sending request (e.g., add auth token)
-      const token = localStorage.getItem('token'); // Example: getting a token from localStorage
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+      let userInfo = localStorage.getItem('user');
+      userInfo = userInfo ? JSON.parse(userInfo) : {};
+      console.log(userInfo?.token)
+      if (userInfo?.token) {
+        config.headers['Authorization'] = `Bearer ${userInfo?.token}`;
       }
       return config;
     },
@@ -39,17 +40,7 @@ const api = axios.create({
 
   export const validateUser = async (data) => {
     try {
-      const response = await api.post('/validuser', data);
-      return response?.data || false;
-    } catch (error) {
-      console.error('Error creating resource:', error);
-      return false;
-    }
-  };
-
-  export const solverOptimalFormulation = async (data) => {
-    try {
-      const response = await api.post('/solver', data);
+      const response = await api.post('/userLogin', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -59,7 +50,7 @@ const api = axios.create({
 
   export const getTemplates = async (data) => {
     try {
-      const response = await api.post('/getsolvertemplates', data);
+      const response = await api.post('/getUserTemplates', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -69,7 +60,7 @@ const api = axios.create({
 
   export const getTemplateMappings = async (data) => {
     try {
-      const response = await api.get('/gettemplateusermappings', {params : data});
+      const response = await api.post('/getTemplateShareList', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -79,17 +70,7 @@ const api = axios.create({
 
   export const updateTemplateMappings = async (data) => {
     try {
-      const response = await api.post('/savetemplateusermappings', data);
-      return response?.data || false;
-    } catch (error) {
-      console.error('Error creating resource:', error);
-      return false;
-    }
-  };
-
-  export const checkTemplateApi = async (data) => {
-    try {
-      const response = await api.get('/checktemplatename', {params : data});
+      const response = await api.post('/saveTemplateShareList', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -99,7 +80,7 @@ const api = axios.create({
 
   export const saveTemplateApi = async (data) => {
     try {
-      const response = await api.post('/savetemplate', data);
+      const response = await api.post('/saveTemplate', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -109,7 +90,17 @@ const api = axios.create({
 
   export const deleteTemplateApi = async (data) => {
     try {
-      const response = await api.post('/deletetemplate', data);
+      const response = await api.post('/deleteTemplate', data);
+      return response?.data || false;
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      return false;
+    }
+  };
+
+  export const solverOptimalFormulation = async (data) => {
+    try {
+      const response = await api.post('/getResultsFromSolver', data);
       return response?.data || false;
     } catch (error) {
       console.error('Error creating resource:', error);

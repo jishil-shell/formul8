@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import './css/Popup.css';
 import { toast, Toaster } from 'react-hot-toast';
-import { checkTemplateApi } from '../api/api';
 import { useLoader } from '../context/LoaderContext';
 
 const TemplateNamePopup = ({ show, onClose }) => {
@@ -17,17 +16,7 @@ const TemplateNamePopup = ({ show, onClose }) => {
       toast('Please enter a valid name!', { style: { background: '#333', color: '#fff' } });
     } else {
       setLoading(true);
-      let requestInfo = {
-        "Template_Name": templateName,
-        "appArea": "Formul8"
-      }
-      let response = await checkTemplateApi(requestInfo);
-      setLoading(false);
-      if (response) {
-        toast('Template name "' + templateName + '" already exists, please try with a different name!', { style: { background: '#333', color: '#fff' } });
-      } else {
-        onClose(templateName, isDefault);
-      }
+      onClose(templateName, isDefault);
     }
   };
 

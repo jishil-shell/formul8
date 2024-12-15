@@ -16,11 +16,14 @@ const TemplateSharePopup = ({ show, onClose }) => {
       setUserList([]);
       setLoading(true);
       let requestInfo = {
-        "Template_Name": selectedTemplate.name
+        "templateName": selectedTemplate.name
       }
-      let response = await getTemplateMappings(requestInfo);
+      let apiResponse = await getTemplateMappings(requestInfo);
       setLoading(false);
-      setUserList(response);
+      if (apiResponse?.status) {
+        setUserList(apiResponse.response);
+      }
+
     }
     if (show) {
       fetchData();
@@ -35,17 +38,16 @@ const TemplateSharePopup = ({ show, onClose }) => {
     let mappings = [];
     userList.forEach((item) => {
       mappings.push({
-        userName: item.UsersID,
+        userId: item.userId,
         isShared: item.isShared
       })
     })
     let requestInfo = {
-      "Template_Name": selectedTemplate.name,
-      "appArea": "Formul8",
-      "Mappings": mappings
+      "templateName": selectedTemplate.name,
+      "mappings": mappings
     }
-    let response = await updateTemplateMappings(requestInfo);
-    if (response) {
+    let apiResponse = await updateTemplateMappings(requestInfo);
+    if (apiResponse?.status) {
       toast('Template successfully shared!', { style: { background: '#008000', color: '#fff' } });
     }
     setLoading(false);
@@ -64,7 +66,7 @@ const TemplateSharePopup = ({ show, onClose }) => {
 
   const handleCheckboxChange = (event) => {
     const updatedList = userList.map(user =>
-      user.UsersID === event.target.value
+      user.userId === event.target.value
         ? { ...user, isShared: event.target.checked }
         : user
     );
@@ -87,11 +89,11 @@ const TemplateSharePopup = ({ show, onClose }) => {
                       <input
                         style={{ width: 24, height: 24, accentColor: 'black' }}
                         type="checkbox"
-                        value={user.UsersID}
-                        checked={user.isShared}
+                        value={user.userId}
+                        checked={user.isShared ? JSON.parse(user.isShared) : false}
                         onChange={handleCheckboxChange}
                       />
-                      <label style={{ marginLeft: 10, fontSize: 22 }}>{user.FullName}</label>
+                      <label style={{ marginLeft: 10, fontSize: 22 }}>{user.fullName}</label>
                     </div>
                   ))
                 ) : (

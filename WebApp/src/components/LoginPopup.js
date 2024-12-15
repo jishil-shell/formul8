@@ -14,13 +14,14 @@ const LoginPopup = ({ onClose }) => {
         userName: username.toLocaleUpperCase(),
         appArea: 'Formul8',
     }
-    let response = await validateUser(requestInfo);
+    let apiResponse = await validateUser(requestInfo);
     setLoading(false);
-    if(response && response.status) {
+    if(apiResponse?.status) {
       let activeUser = {
-        username : response.users[0].UsersID,
-        fullname : response.users[0].FullName,
-        email : response.users[0].EmailID,
+        token : apiResponse.accessToken,
+        username : apiResponse.response.userID,
+        fullname : apiResponse.response.fullName,
+        email : apiResponse.response.emailID,
       }
       onClose(activeUser);
     } else {
