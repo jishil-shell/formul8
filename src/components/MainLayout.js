@@ -9,7 +9,7 @@ import SeparatorLine from './SeparatorLine';
 import TextInput from './TextInput';
 import './css/MainLayout.css';
 import { Typography } from '@mui/material';
-import { solverOptimalFormulation, saveTemplateApi, deleteTemplateApi } from '../api/api';
+import { getResultsFromSolver, saveTemplateApi, deleteTemplateApi } from '../api/api';
 import ResultLayout from './ResultLayout';
 import { useLoader } from '../context/LoaderContext';
 import { toast, Toaster } from 'react-hot-toast';
@@ -191,14 +191,16 @@ const MainLayout = () => {
             minCarbonParams.objectiveType = "carbon";
             minCarbonParams.objectiveSense = "min";
             minCarbonParams.carbonFootprintLimit = null;
-            let minCarbonFootprintResults = await solverOptimalFormulation(minCarbonParams);
+            let apiResponse =  await getResultsFromSolver(minCarbonParams);
+            let minCarbonFootprintResults = apiResponse?.status && apiResponse?.response ? apiResponse?.response : {};
             let minCarbonFootprintValue = minCarbonFootprintResults?.expressions?.carbon_footprint_exp?.value;
 
             const minCostParams = await formatRequestData();
             minCostParams.objectiveType = "cost";
             minCostParams.objectiveSense = "min";
             minCostParams.carbonFootprintLimit = null;
-            let minCostResults = await solverOptimalFormulation(minCostParams);
+            apiResponse =  await getResultsFromSolver(minCostParams);
+            let minCostResults = apiResponse?.status && apiResponse?.response ? apiResponse?.response : {};
             let minCostValue = minCostResults?.expressions?.carbon_footprint_exp?.value;
 
             let ingredientNames = minCarbonFootprintResults?.inputs?.ingredients ? Object.keys(minCarbonFootprintResults?.inputs?.ingredients) : [];
@@ -222,7 +224,8 @@ const MainLayout = () => {
                     minCostParams.objectiveType = "cost";
                     minCostParams.objectiveSense = "min";
                     minCostParams.carbonFootprintLimit = carbonFootprintLimit;
-                    results = await solverOptimalFormulation(minCostParams);
+                    apiResponse =  await getResultsFromSolver(minCostParams);
+                    results = apiResponse?.status && apiResponse?.response ? apiResponse?.response : {};
                 }
 
                 if (results?.expressions?.cost_exp?.value) {
@@ -270,7 +273,8 @@ const MainLayout = () => {
                 try {
                     setLoading(true);
                     const newData = await formatRequestData(option);
-                    const result = await solverOptimalFormulation(newData);
+                    let apiResponse =  await getResultsFromSolver(newData);
+                    const result = apiResponse?.status && apiResponse?.response ? apiResponse?.response : {};
                     setLoading(false);
                     if (result && result.expressions) {
                         setActiveTab(1);
@@ -300,7 +304,8 @@ const MainLayout = () => {
                         });
                     } else {
                         delete newData['total_polyol_quantity'];
-                        const result = await solverOptimalFormulation(newData);
+                        let apiResponse =  await getResultsFromSolver(newData);
+                        const result = apiResponse?.status && apiResponse?.response ? apiResponse?.response : {};
                         setLoading(false);
                         if (result && result.expressions) {
                             setActiveTab(1);

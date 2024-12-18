@@ -29,7 +29,8 @@ export const UserProvider = ({ children }) => {
   // Logout function to clear both state and localStorage
   const logoutUser = () => {
     setUser({});
-    localStorage.removeItem('user'); // Clear from localStorage
+    localStorage.removeItem('user'); 
+    localStorage.removeItem('token');
   };
 
   return (

@@ -18,7 +18,6 @@ const LoginPopup = ({ onClose }) => {
     setLoading(false);
     if(apiResponse?.status) {
       let activeUser = {
-        token : apiResponse.accessToken,
         username : apiResponse.response.userID,
         fullname : apiResponse.response.fullName,
         email : apiResponse.response.emailID,

@@ -14,7 +14,6 @@ const FilterPanel = ({ onFilterChange, onDataLoad, onAction, reload }) => {
     const { jsonData } = useDataContext();
     const { setResultData } = useDataContext();
     const { selectedTemplate, setSelectedTemplate } = useDataContext();
-    const { user } = useUserContext();
 
 
     const [showFileUpload] = useState(false);

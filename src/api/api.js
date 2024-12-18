@@ -13,11 +13,9 @@ const api = axios.create({
   // Request interceptor
   api.interceptors.request.use(
     config => {
-      let userInfo = localStorage.getItem('user');
-      userInfo = userInfo ? JSON.parse(userInfo) : {};
-      console.log(userInfo?.token)
-      if (userInfo?.token) {
-        config.headers['Authorization'] = `Bearer ${userInfo?.token}`;
+      let accessToken = localStorage.getItem('token');
+      if (accessToken) {
+        config.headers['Authorization'] = `Bearer ${accessToken}`;
       }
       return config;
     },
@@ -27,10 +25,18 @@ const api = axios.create({
   // Response interceptor
   api.interceptors.response.use(
     response => response,
-    error => {
-      // Handle common errors (e.g., 401 Unauthorized)
-      if (error.response && error.response.status === 401) {
-        // Optionally: Redirect to login or show a modal
+    async (error) => {
+      const originalRequest = error.config;
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        originalRequest._retry = true;
+        const apiResponse = await validateUser({
+          userName: 'INJKP0'
+        });
+        if(apiResponse?.status && apiResponse.accessToken) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${apiResponse.accessToken}`;
+        }
+        
+        return api(originalRequest);
       }
       return Promise.reject(error);
     }
@@ -41,7 +47,11 @@ const api = axios.create({
   export const validateUser = async (data) => {
     try {
       const response = await api.post('/userLogin', data);
-      return response?.data || false;
+      let apiResponse = response?.data || {};
+      if(apiResponse?.status && apiResponse?.accessToken) {
+        localStorage.setItem('token', apiResponse?.accessToken);
+      }
+      return apiResponse;
     } catch (error) {
       console.error('Error creating resource:', error);
       return false;
@@ -98,7 +108,7 @@ const api = axios.create({
     }
   };
 
-  export const solverOptimalFormulation = async (data) => {
+  export const getResultsFromSolver = async (data) => {
     try {
       const response = await api.post('/getResultsFromSolver', data);
       return response?.data || false;
